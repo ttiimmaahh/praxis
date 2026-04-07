@@ -4,9 +4,9 @@
   "description": "Premium open-source Markdown editor with course authoring",
   "main": "./out/main/index.js",
   "scripts": {
-    "dev": "unset ELECTRON_RUN_AS_NODE && electron-vite dev",
-    "build": "unset ELECTRON_RUN_AS_NODE && electron-vite build",
-    "preview": "unset ELECTRON_RUN_AS_NODE && electron-vite preview",
+    "dev": "cross-env ELECTRON_RUN_AS_NODE= electron-vite dev",
+    "build": "cross-env ELECTRON_RUN_AS_NODE= electron-vite build",
+    "preview": "cross-env ELECTRON_RUN_AS_NODE= electron-vite preview",
     "package": "electron-builder"
   },
   "dependencies": {
@@ -35,6 +35,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.4.0",
+    "cross-env": "^10.1.0",
     "electron": "^41.1.1",
     "electron-builder": "^26.8.2",
     "electron-vite": "^5.0.0",
