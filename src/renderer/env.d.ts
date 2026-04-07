@@ -43,6 +43,7 @@ interface ElectronAPI {
   searchWorkspace: (rootPath: string, query: string) => Promise<WorkspaceSearchMatch[]>
   getSession: () => Promise<SessionData>
   saveSession: (data: Partial<SessionData>) => Promise<void>
+  setTitleBarOverlay: (options: { isDark: boolean }) => Promise<void>
   onFileSystemChange: (callback: (event: FileSystemChangeEvent) => void) => () => void
 }
 

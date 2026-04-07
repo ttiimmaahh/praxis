@@ -34,6 +34,9 @@ const electronAPI = {
   saveSession: (data: Partial<SessionData>): Promise<void> =>
     ipcRenderer.invoke('session:save', data),
 
+  setTitleBarOverlay: (options: { isDark: boolean }): Promise<void> =>
+    ipcRenderer.invoke('window:setTitleBarOverlay', options),
+
   onFileSystemChange: (callback: (event: FileSystemChangeEvent) => void): (() => void) => {
     const handler = (_event: Electron.IpcRendererEvent, data: FileSystemChangeEvent): void => {
       callback(data)
