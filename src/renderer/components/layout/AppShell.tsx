@@ -13,13 +13,13 @@ export function AppShell(): React.JSX.Element {
       <TitleBar />
 
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        <ResizablePanel defaultSize={20} minSize={12} maxSize={40} className="min-w-0">
+        <ResizablePanel defaultSize={25} minSize={15} maxSize={40} className="min-w-0">
           <Sidebar />
         </ResizablePanel>
 
-        <ResizableHandle withHandle />
+        <ResizableHandle />
 
-        <ResizablePanel defaultSize={80} minSize={40} className="min-w-0">
+        <ResizablePanel defaultSize={75} minSize={40} className="min-w-0">
           <EditorArea />
         </ResizablePanel>
       </ResizablePanelGroup>

@@ -1,5 +1,6 @@
 import { FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 
 export function TitleBar(): React.JSX.Element {
@@ -26,9 +27,14 @@ export function TitleBar(): React.JSX.Element {
       </div>
 
       <div className="flex items-center gap-1 px-3">
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenFolder}>
-          <FolderOpen className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenFolder}>
+              <FolderOpen className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Open Folder</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   )

@@ -6,9 +6,9 @@ export function Sidebar(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
 
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-10 shrink-0 items-center px-4">
-        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="flex h-full flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
+      <div className="flex h-10 shrink-0 items-center px-3">
+        <span className="truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Explorer
         </span>
       </div>
@@ -16,10 +16,10 @@ export function Sidebar(): React.JSX.Element {
         {rootPath ? (
           <FileTree />
         ) : (
-          <div className="flex flex-col items-center justify-center gap-2 px-4 py-12 text-center">
+          <div className="flex flex-col gap-1 px-3 py-8">
             <span className="text-sm text-muted-foreground">No folder open</span>
-            <span className="text-xs text-muted-foreground/60">
-              Use the toolbar button to open a folder
+            <span className="text-xs leading-relaxed text-muted-foreground/60">
+              Use the folder button in the title bar to open a project
             </span>
           </div>
         )}
