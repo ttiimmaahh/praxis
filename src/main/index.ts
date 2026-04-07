@@ -15,7 +15,7 @@ function createWindow(): BrowserWindow {
     minHeight: 400,
     show: false,
     titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 20, y: 18 },
+    trafficLightPosition: { x: 16, y: 21 },
     transparent: true,
     vibrancy: 'sidebar',
     visualEffectState: 'active',

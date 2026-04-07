@@ -4,17 +4,18 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarProvider,
-  SidebarRail,
-  SidebarTrigger
+  SidebarTrigger,
+  useSidebar
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileTree } from '@/components/file-tree/FileTree'
 import { EditorArea } from './EditorArea'
 import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useSidebarResize } from '@/hooks/use-sidebar-resize'
 import { FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 
 function SidebarExplorer(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
@@ -28,34 +29,25 @@ function SidebarExplorer(): React.JSX.Element {
 
   return (
     <>
-      <SidebarHeader className="h-[52px] justify-center border-b border-sidebar-border app-drag-region">
-        {/* Top row: traffic light spacing + open folder button */}
-        <div className="flex items-center justify-end px-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-sidebar-foreground/50 hover:text-sidebar-foreground"
-                onClick={handleOpenFolder}
-              >
-                <FolderOpen className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Open Folder</TooltipContent>
-          </Tooltip>
-        </div>
-      </SidebarHeader>
+      <SidebarHeader className="h-[38px] app-drag-region" />
       <SidebarContent>
         <ScrollArea className="h-full">
           {rootPath ? (
             <FileTree />
           ) : (
-            <div className="flex flex-col gap-1 px-3 py-6">
-              <span className="text-[13px] text-sidebar-foreground/70">No folder open</span>
-              <span className="text-[11px] leading-relaxed text-sidebar-foreground/40">
-                Press the folder button or use the menu to open a project
+            <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
+              <span className="text-[13px] font-medium text-sidebar-foreground/70">
+                No folder open
               </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 text-sidebar-foreground/70"
+                onClick={handleOpenFolder}
+              >
+                <FolderOpen />
+                Open Folder
+              </Button>
             </div>
           )}
         </ScrollArea>
@@ -67,10 +59,17 @@ function SidebarExplorer(): React.JSX.Element {
 function TitleBarInset(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
   const folderName = rootPath ? rootPath.split('/').pop() ?? rootPath : null
+  const { state } = useSidebar()
+  const sidebarCollapsed = state === 'collapsed'
 
   return (
-    <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-border/50 px-4 app-drag-region">
-      <SidebarTrigger className="-ml-1 h-7 w-7 text-muted-foreground/60 hover:text-foreground" />
+    <header
+      className={cn(
+        'flex h-[38px] shrink-0 items-center gap-2 border-b border-border/50 px-3 app-drag-region transition-[padding] duration-200',
+        sidebarCollapsed && 'pl-[80px]'
+      )}
+    >
+      <SidebarTrigger className="-ml-1 text-muted-foreground/60 hover:text-foreground" />
       <Separator orientation="vertical" className="mr-1 !h-4 bg-border/40" />
       <span className="text-[13px] font-medium text-foreground/60 select-none">
         {folderName ?? 'md-editor'}
@@ -79,12 +78,46 @@ function TitleBarInset(): React.JSX.Element {
   )
 }
 
-export function AppShell(): React.JSX.Element {
+function SidebarResizeHandle(): React.JSX.Element {
+  const { toggleSidebar, state } = useSidebar()
+  const sidebarWidth = useWorkspaceStore((s) => s.sidebarWidth)
+
+  const { dragRef, handleMouseDown } = useSidebarResize({
+    currentWidth: sidebarWidth,
+    onResize: (width) => useWorkspaceStore.getState().setSidebarWidth(width),
+    onToggle: toggleSidebar,
+    isCollapsed: state === 'collapsed'
+  })
+
   return (
-    <SidebarProvider>
-      <Sidebar className="border-r-0">
+    <button
+      ref={dragRef}
+      data-sidebar="rail"
+      data-slot="sidebar-rail"
+      aria-label="Resize Sidebar"
+      tabIndex={-1}
+      onMouseDown={handleMouseDown}
+      className={cn(
+        'absolute inset-y-0 z-20 flex w-4 cursor-col-resize items-center justify-center group-data-[side=left]:-right-4 ltr:-translate-x-1/2 rtl:-translate-x-1/2',
+        'after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border',
+        'group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full hover:group-data-[collapsible=offcanvas]:bg-sidebar',
+        '[[data-side=left][data-collapsible=offcanvas]_&]:-right-2',
+        state === 'collapsed' && 'cursor-e-resize'
+      )}
+    />
+  )
+}
+
+export function AppShell(): React.JSX.Element {
+  const sidebarWidth = useWorkspaceStore((s) => s.sidebarWidth)
+
+  return (
+    <SidebarProvider
+      style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+    >
+      <Sidebar variant="inset" className="border-r-0">
         <SidebarExplorer />
-        <SidebarRail />
+        <SidebarResizeHandle />
       </Sidebar>
       <SidebarInset>
         <TitleBarInset />
