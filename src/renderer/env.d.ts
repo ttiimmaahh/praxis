@@ -18,6 +18,7 @@ interface SessionData {
 }
 
 interface ElectronAPI {
+  platform: 'darwin' | 'win32' | 'linux'
   openFolder: () => Promise<string | null>
   readDirectory: (directoryPath: string) => Promise<FileEntry[]>
   readFile: (filePath: string) => Promise<string>

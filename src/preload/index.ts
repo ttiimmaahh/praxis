@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 const electronAPI = {
+  platform: process.platform as 'darwin' | 'win32' | 'linux',
+
   openFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFolder'),
 
   readDirectory: (directoryPath: string): Promise<FileEntry[]> =>
