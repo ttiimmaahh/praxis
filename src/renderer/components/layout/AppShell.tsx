@@ -28,11 +28,9 @@ function SidebarExplorer(): React.JSX.Element {
 
   return (
     <>
-      <SidebarHeader className="h-[52px] justify-center border-b border-sidebar-border px-3">
-        <div className="flex items-center justify-between">
-          <span className="truncate text-[11px] font-semibold uppercase tracking-widest text-sidebar-foreground/50">
-            Explorer
-          </span>
+      <SidebarHeader className="h-[52px] justify-center border-b border-sidebar-border app-drag-region">
+        {/* Top row: traffic light spacing + open folder button */}
+        <div className="flex items-center justify-end px-2">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -44,7 +42,7 @@ function SidebarExplorer(): React.JSX.Element {
                 <FolderOpen className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">Open Folder</TooltipContent>
+            <TooltipContent side="bottom">Open Folder</TooltipContent>
           </Tooltip>
         </div>
       </SidebarHeader>
