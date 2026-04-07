@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron/main'
+import { BrowserWindow, screen } from 'electron'
 import { JsonStore } from './json-store'
 
 interface WindowState {

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron/main'
+import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { getWindowState, trackWindowState } from './lib/window-state'
 import { registerIpcHandlers } from './ipc-handlers'

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
-import { app } from 'electron/main'
+import { app } from 'electron'
 
 export interface JsonStoreOptions {
   fileName: string
