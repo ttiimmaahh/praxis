@@ -179,3 +179,21 @@ Add an export pipeline that renders Markdown content to HTML and PDF. For indivi
 - [ ] The user can export an entire course to HTML (one page per lesson, with navigation)
 - [ ] The user can export an entire course to a single PDF
 - [ ] Exported output is visually consistent with the in-app rendering
+
+---
+
+## Cleanup phase (deferred polish)
+
+Work deferred from earlier phases or discovered during implementation. Tackle after core feature phases (or incrementally alongside them).
+
+### Phase 2 editor — follow-ups
+
+- **Round-trip fidelity**: Document and test how closely saved Markdown matches disk after open/close (Milkdown + remark may normalize whitespace, list markers, or other stylistic details). Decide product stance: byte-identical for externally edited files vs. “stable for content authored in-app.”
+- **Large-document performance**: Smoke-test or benchmark the editor with **5,000+ line** files (scroll, type, undo) on macOS, Windows, and Linux.
+- **Editing shortcuts**: Verify **undo, redo, cut, copy, paste, select all** (and platform conventions) on all three platforms with the Milkdown/ProseMirror stack.
+- **Window chrome (macOS)**: Investigate **thin edge/hairline** around the window (transparent/opaque + vibrancy vs. solid `backgroundColor`); try renderer masks, Electron options, or documented workarounds; re-evaluate if **vibrancy** should return once the line is gone.
+- **Typography / spacing**: Crepe + Luma variables are baseline; optional pass to align Milkdown blocks with the rest of the shell (Phase 4 may subsume some of this).
+
+### Global CSS / shell
+
+- Revisit universal `*` base styles (`border-border`, etc.) if any Electron/Chromium edge artifacts persist after window fixes.

@@ -1,10 +1,10 @@
-import { useEffect, useRef, useCallback } from 'react'
-import { EditorState } from '@codemirror/state'
-import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
-import { markdown } from '@codemirror/lang-markdown'
-import { languages } from '@codemirror/language-data'
+import { useEffect, useRef } from 'react'
+import { Crepe, CrepeFeature } from '@milkdown/crepe'
+import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react'
 import { useWorkspaceStore } from '@/stores/workspace-store'
+
+import '@milkdown/crepe/theme/common/style.css'
+import '@milkdown/crepe/theme/frame.css'
 
 interface MarkdownEditorProps {
   filePath: string
@@ -12,107 +12,68 @@ interface MarkdownEditorProps {
   onContentChange: (filePath: string, content: string) => void
 }
 
-const cursorStateMap = new Map<string, { scrollTop: number; selection: { anchor: number; head: number } }>()
-
-export function MarkdownEditor({
+function CrepeEditor({
   filePath,
   content,
   onContentChange
 }: MarkdownEditorProps): React.JSX.Element {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const viewRef = useRef<EditorView | null>(null)
   const filePathRef = useRef(filePath)
   const markDirty = useWorkspaceStore((s) => s.markDirty)
-
-  const handleChange = useCallback(
-    (newContent: string) => {
-      onContentChange(filePathRef.current, newContent)
-      markDirty(filePathRef.current, true)
-    },
-    [onContentChange, markDirty]
-  )
+  const onContentChangeRef = useRef(onContentChange)
+  const initialContentRef = useRef(content)
 
   useEffect(() => {
     filePathRef.current = filePath
   }, [filePath])
 
   useEffect(() => {
-    if (!containerRef.current) return
+    onContentChangeRef.current = onContentChange
+  }, [onContentChange])
 
-    const savedState = cursorStateMap.get(filePath)
-
-    const state = EditorState.create({
-      doc: content,
-      selection: savedState
-        ? { anchor: savedState.selection.anchor, head: savedState.selection.head }
-        : undefined,
-      extensions: [
-        lineNumbers(),
-        highlightActiveLine(),
-        drawSelection(),
-        history(),
-        markdown({ codeLanguages: languages }),
-        keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            handleChange(update.state.doc.toString())
-          }
-        }),
-        EditorView.theme({
-          '&': {
-            height: '100%',
-            fontSize: '14px'
-          },
-          '.cm-scroller': {
-            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
-            lineHeight: '1.6',
-            padding: '8px 0'
-          },
-          '.cm-content': {
-            padding: '0 16px'
-          },
-          '.cm-gutters': {
-            backgroundColor: 'transparent',
-            border: 'none',
-            color: 'var(--muted-foreground)',
-            paddingLeft: '8px'
-          },
-          '.cm-activeLineGutter': {
-            backgroundColor: 'transparent'
-          },
-          '&.cm-focused .cm-cursor': {
-            borderLeftColor: 'var(--foreground)'
-          },
-          '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': {
-            backgroundColor: 'var(--accent) !important'
-          }
-        }),
-        EditorView.lineWrapping
-      ]
+  useEditor((root) => {
+    const crepe = new Crepe({
+      root,
+      defaultValue: initialContentRef.current,
+      features: {
+        [CrepeFeature.CodeMirror]: true,
+        [CrepeFeature.ListItem]: true,
+        [CrepeFeature.LinkTooltip]: true,
+        [CrepeFeature.ImageBlock]: true,
+        [CrepeFeature.BlockEdit]: true,
+        [CrepeFeature.Toolbar]: true,
+        [CrepeFeature.Placeholder]: true,
+        [CrepeFeature.Table]: true,
+        [CrepeFeature.Cursor]: true,
+        [CrepeFeature.Latex]: false,
+        [CrepeFeature.TopBar]: false
+      },
+      featureConfigs: {
+        [CrepeFeature.Placeholder]: {
+          text: 'Start writing...',
+          mode: 'doc'
+        }
+      }
     })
 
-    const view = new EditorView({ state, parent: containerRef.current })
-    viewRef.current = view
-
-    if (savedState) {
-      requestAnimationFrame(() => {
-        view.scrollDOM.scrollTop = savedState.scrollTop
+    crepe.on((listener) => {
+      listener.markdownUpdated((_ctx, markdown, prevMarkdown) => {
+        if (markdown !== prevMarkdown) {
+          onContentChangeRef.current(filePathRef.current, markdown)
+          markDirty(filePathRef.current, true)
+        }
       })
-    }
+    })
 
-    return () => {
-      const currentView = viewRef.current
-      if (currentView) {
-        const selection = currentView.state.selection.main
-        cursorStateMap.set(filePath, {
-          scrollTop: currentView.scrollDOM.scrollTop,
-          selection: { anchor: selection.anchor, head: selection.head }
-        })
-        currentView.destroy()
-        viewRef.current = null
-      }
-    }
-  }, [filePath, content, handleChange])
+    return crepe
+  }, [])
 
-  return <div ref={containerRef} className="h-full w-full overflow-hidden" />
+  return <Milkdown />
+}
+
+export function MarkdownEditor(props: MarkdownEditorProps): React.JSX.Element {
+  return (
+    <MilkdownProvider>
+      <CrepeEditor {...props} />
+    </MilkdownProvider>
+  )
 }

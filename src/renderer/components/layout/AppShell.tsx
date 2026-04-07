@@ -116,15 +116,16 @@ export function AppShell(): React.JSX.Element {
 
   return (
     <SidebarProvider
+      className="h-dvh min-h-0 overflow-hidden"
       style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
     >
       <Sidebar variant="inset" className="border-r-0">
         <SidebarExplorer />
         <SidebarResizeHandle />
       </Sidebar>
-      <SidebarInset>
+      <SidebarInset className="min-h-0 ring-0 peer-data-[variant=inset]:shadow-none">
         <TitleBarInset />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <EditorArea />
         </div>
       </SidebarInset>
