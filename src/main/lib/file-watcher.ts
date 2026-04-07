@@ -1,5 +1,5 @@
 import { watch, type FSWatcher } from 'chokidar'
-import { BrowserWindow } from 'electron/main'
+import { BrowserWindow } from 'electron'
 
 let watcher: FSWatcher | null = null
 let debounceTimer: ReturnType<typeof setTimeout> | null = null

@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, ipcMain } from 'electron/main'
+import { BrowserWindow, dialog, ipcMain } from 'electron'
 import {
   readDirectory,
   readFileContent,

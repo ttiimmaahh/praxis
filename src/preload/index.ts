@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron/renderer'
+import { contextBridge, ipcRenderer } from 'electron'
 
 const electronAPI = {
   openFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFolder'),
