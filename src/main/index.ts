@@ -20,9 +20,10 @@ function createWindow(): BrowserWindow {
     ...(isMac
       ? {
           trafficLightPosition: { x: 16, y: 21 },
-          transparent: true,
-          vibrancy: 'sidebar',
-          visualEffectState: 'active'
+          // Opaque window: transparent + vibrancy often shows a 1px edge artifact on macOS;
+          // solid backgroundColor matches app chrome (sidebar, oklch(0.935) ≈ #EDEDED).
+          transparent: false,
+          backgroundColor: '#EDEDED'
         }
       : {
           titleBarOverlay: {

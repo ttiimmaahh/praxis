@@ -1,0 +1,33 @@
+---
+description: Cross-platform targeting requirements for macOS, Windows, and Linux
+alwaysApply: true
+---
+
+# Cross-Platform Targeting
+
+This is an Electron desktop app that must run on **macOS, Windows, and Linux**. Every implementation decision must account for all three platforms.
+
+## Platform-Aware Patterns
+
+- Use `process.platform` (exposed as `window.electronAPI.platform` in the renderer) to branch platform-specific behavior
+- Use the `data-platform` attribute on `<html>` for CSS platform targeting (e.g. `:root[data-platform="darwin"]`)
+- Never use Unix-only shell commands in npm scripts (no `unset`, `rm -rf`, etc.) — use Node.js scripts or `cross-env` equivalents
+- Use `path.join()` or `path.sep` instead of hardcoded `/` separators in file paths
+
+## Electron Specifics
+
+- `titleBarStyle: 'hidden'` is used on all platforms
+- macOS uses `transparent: false` and a solid `backgroundColor` matching app chrome (avoids a 1px edge artifact with `transparent` + vibrancy); traffic light positioning is set via `trafficLightPosition`
+- Windows/Linux get `titleBarOverlay` with themed colors and native minimize/maximize/close controls
+- The `ELECTRON_RUN_AS_NODE` env var is handled by `scripts/electron-vite.js` — do not add platform-specific workarounds to npm scripts
+- Use standard `electron` imports (not `electron/main` or `electron/renderer`) for cross-platform module resolution
+
+## File System
+
+- File paths are case-sensitive on Linux, case-insensitive on macOS/Windows — never rely on case to distinguish files
+- Use `app.getPath()` for platform-appropriate config/data directories
+- Line endings may differ (`\n` vs `\r\n`) — handle gracefully when reading/writing files
+
+## Testing
+
+- Any UI or system-level change should be validated (or at minimum considered) on all three platforms before closing out

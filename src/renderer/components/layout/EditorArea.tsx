@@ -86,9 +86,9 @@ export function EditorArea(): React.JSX.Element {
   }
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
       <TabBar />
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [touch-action:pan-y]">
         {isLoading ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Loading...
