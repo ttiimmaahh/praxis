@@ -26,6 +26,9 @@ const electronAPI = {
   delete: (entryPath: string): Promise<void> =>
     ipcRenderer.invoke('fs:delete', entryPath),
 
+  searchWorkspace: (rootPath: string, query: string): Promise<WorkspaceSearchMatch[]> =>
+    ipcRenderer.invoke('fs:searchWorkspace', rootPath, query),
+
   getSession: (): Promise<SessionData> => ipcRenderer.invoke('session:get'),
 
   saveSession: (data: Partial<SessionData>): Promise<void> =>

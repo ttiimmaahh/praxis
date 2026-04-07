@@ -10,6 +10,12 @@ interface FileSystemChangeEvent {
   path: string
 }
 
+interface WorkspaceSearchMatch {
+  filePath: string
+  line: number
+  lineText: string
+}
+
 interface SessionData {
   rootPath: string | null
   openFiles: Array<{ filePath: string; fileName: string }>
@@ -27,6 +33,7 @@ interface ElectronAPI {
   createDirectory: (parentPath: string, dirName: string) => Promise<string>
   rename: (oldPath: string, newName: string) => Promise<string>
   delete: (entryPath: string) => Promise<void>
+  searchWorkspace: (rootPath: string, query: string) => Promise<WorkspaceSearchMatch[]>
   getSession: () => Promise<SessionData>
   saveSession: (data: Partial<SessionData>) => Promise<void>
   onFileSystemChange: (callback: (event: FileSystemChangeEvent) => void) => () => void
