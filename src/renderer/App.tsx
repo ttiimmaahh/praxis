@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppShell } from '@/components/layout/AppShell'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 
@@ -60,7 +61,11 @@ function App(): React.JSX.Element {
     }
   }, [])
 
-  return <AppShell />
+  return (
+    <TooltipProvider delayDuration={300}>
+      <AppShell />
+    </TooltipProvider>
+  )
 }
 
 export default App
