@@ -92,11 +92,21 @@ Implement a theming system with at least a light theme and a dark theme. Allow t
 
 ### Acceptance criteria
 
-- [ ] The user can switch between light and dark themes
-- [ ] The user can configure font family, font size, and line height
-- [ ] Theme preference persists between sessions
-- [ ] Visual polish is applied consistently across sidebar, editor, outline, command palette, and all dialogs
-- [ ] The overall experience feels noticeably more refined than a generic code editor
+- [x] The user can switch between light and dark themes
+- [x] The user can configure font family, font size, and line height
+- [x] Theme preference persists between sessions
+- [x] Visual polish is applied consistently across sidebar, editor, outline, command palette, and all dialogs
+- [x] The overall experience feels noticeably more refined than a generic code editor
+
+### Phase 4 implementation log
+
+1. **Theming (light / dark / system)** — **Done.** `appearance-store` + `applyAppearanceToDocument` toggle the `dark` class on `document.documentElement`; system mode follows `prefers-color-scheme` with `useAppearanceSystemListener`. Palette icon + popover in the title bar; command palette entry opens the same menu.
+
+2. **Typography** — **Done.** Presets: sans (system), serif, monospace; editor font size 13–22px and line height 1.35–2.0 via sliders. CSS variables `--editor-font-*` and `--editor-scale` wire Crepe (`--crepe-font-default` / title); shell uses `--app-font-family` on `html`/`body`. Crepe’s theme ships fixed `px` on `.ProseMirror` blocks, so `globals.css` applies scaled sizes and line-height with overrides after those rules.
+
+3. **Persistence** — **Done.** `themeMode`, `editorFontPreset`, `editorFontSizePx`, and `editorLineHeight` are stored in `session.json` via extended `SessionData`; `getSession` / `saveSession` merge with defaults so older session files stay valid.
+
+4. **Polish** — **Done.** Short color transitions on `html`, shared popover styling, title bar layout with truncated folder name + appearance control, command palette integration, focus rings on native controls in the appearance menu.
 
 ---
 

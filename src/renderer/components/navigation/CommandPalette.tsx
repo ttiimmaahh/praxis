@@ -16,7 +16,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { useWorkspaceStore } from '@/stores/workspace-store'
-import { FileSearch, FolderOpen, LayoutPanelLeft, ListTree, Save, X } from 'lucide-react'
+import { FileSearch, FolderOpen, LayoutPanelLeft, ListTree, Palette, Save, X } from 'lucide-react'
 
 const isMac = window.electronAPI.platform === 'darwin'
 const mod = isMac ? '⌘' : 'Ctrl+'
@@ -112,6 +112,17 @@ export function CommandPalette(): React.JSX.Element {
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="View">
+              <CommandItem
+                onSelect={() => {
+                  setOpen(false)
+                  requestAnimationFrame(() => {
+                    document.querySelector<HTMLButtonElement>('[data-appearance-trigger]')?.click()
+                  })
+                }}
+              >
+                <Palette className="text-muted-foreground" />
+                <span>Appearance & typography…</span>
+              </CommandItem>
               <CommandItem
                 onSelect={() => {
                   setOpen(false)

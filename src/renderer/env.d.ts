@@ -16,11 +16,18 @@ interface WorkspaceSearchMatch {
   lineText: string
 }
 
+type ThemeMode = 'light' | 'dark' | 'system'
+type EditorFontPreset = 'system' | 'serif' | 'mono'
+
 interface SessionData {
   rootPath: string | null
   openFiles: Array<{ filePath: string; fileName: string }>
   activeFilePath: string | null
   sidebarWidth: number
+  themeMode?: ThemeMode
+  editorFontPreset?: EditorFontPreset
+  editorFontSizePx?: number
+  editorLineHeight?: number
 }
 
 interface ElectronAPI {
