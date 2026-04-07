@@ -11,6 +11,9 @@ interface WorkspaceState {
   openTabs: FileTab[]
   activeTabPath: string | null
   sidebarWidth: number
+  outlineOpen: boolean
+  commandPaletteOpen: boolean
+  workspaceSearchOpen: boolean
 
   setRootPath: (path: string | null) => void
   openFile: (filePath: string, fileName: string) => void
@@ -18,6 +21,10 @@ interface WorkspaceState {
   setActiveTab: (filePath: string) => void
   markDirty: (filePath: string, isDirty: boolean) => void
   setSidebarWidth: (width: number) => void
+  setOutlineOpen: (open: boolean) => void
+  toggleOutline: () => void
+  setCommandPaletteOpen: (open: boolean) => void
+  setWorkspaceSearchOpen: (open: boolean) => void
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
@@ -25,6 +32,9 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   openTabs: [],
   activeTabPath: null,
   sidebarWidth: 260,
+  outlineOpen: true,
+  commandPaletteOpen: false,
+  workspaceSearchOpen: false,
 
   setRootPath: (path) => set({ rootPath: path }),
 
@@ -62,5 +72,13 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
       )
     })),
 
-  setSidebarWidth: (width) => set({ sidebarWidth: width })
+  setSidebarWidth: (width) => set({ sidebarWidth: width }),
+
+  setOutlineOpen: (open) => set({ outlineOpen: open }),
+
+  toggleOutline: () => set((s) => ({ outlineOpen: !s.outlineOpen })),
+
+  setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
+
+  setWorkspaceSearchOpen: (open) => set({ workspaceSearchOpen: open })
 }))

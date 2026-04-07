@@ -62,11 +62,23 @@ Add a document outline panel that lists headings in the current file and allows 
 
 ### Acceptance criteria
 
-- [ ] A document outline panel lists all headings in the active file; clicking a heading scrolls to it
-- [ ] A command palette opens via keyboard shortcut and lists all registered actions
-- [ ] Keyboard shortcuts exist for open, save, close, search, toggle sidebar, and toggle outline
-- [ ] Workspace-wide search finds text across all Markdown files and navigates to results
-- [ ] Word count and reading time are displayed for the active document
+- [x] A document outline panel lists all headings in the active file; clicking a heading scrolls to it
+- [x] A command palette opens via keyboard shortcut and lists all registered actions
+- [x] Keyboard shortcuts exist for open, save, close, search, toggle sidebar, and toggle outline
+- [x] Workspace-wide search finds text across all Markdown files and navigates to results
+- [x] Word count and reading time are displayed for the active document
+
+### Phase 3 implementation log
+
+1. **Document outline (headings + jump)** — **Done.** Added `DocumentOutline` beside the editor, ATX heading extraction from live markdown, and `MarkdownEditor` imperative scroll via ProseMirror heading positions (`scrollToHeadingIndex`).
+
+2. **Command palette** — **Done.** Integrated `cmdk` (`components/ui/command.tsx`) with `CommandPalette` dialog listing file, workspace, and view actions; wired to store and window events for save/close/sidebar.
+
+3. **Keyboard shortcuts** — **Done.** `KeyboardNavigationLayer` registers Ctrl/Cmd+O (open folder), Ctrl/Cmd+Shift+P (palette), Ctrl/Cmd+Shift+F (workspace search), Ctrl/Cmd+Shift+O (toggle outline), Ctrl/Cmd+B (toggle sidebar when not in a contenteditable field to avoid clashing with bold). EditorArea keeps Ctrl/Cmd+S and Ctrl/Cmd+W for save and close tab.
+
+4. **Workspace-wide Markdown search** — **Done.** Main-process `searchWorkspaceMarkdown` walks the open folder for `.md` files, matches lines (case-insensitive), exposes `fs:searchWorkspace` IPC; `WorkspaceSearchDialog` lists results and opens the selected file.
+
+5. **Word count + reading time** — **Done.** `word-stats.ts` counts words from live markdown; status strip under the tab bar shows word count and estimated minutes (~200 wpm) whenever the document has at least one word.
 
 ---
 

@@ -11,6 +11,10 @@ import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileTree } from '@/components/file-tree/FileTree'
 import { EditorArea } from './EditorArea'
+import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
+import { CommandPalette } from '@/components/navigation/CommandPalette'
+import { WorkspaceSearchDialog } from '@/components/navigation/WorkspaceSearchDialog'
+import { basenameFromPath } from '@/lib/path-utils'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useSidebarResize } from '@/hooks/use-sidebar-resize'
 import { FolderOpen } from 'lucide-react'
@@ -60,7 +64,7 @@ function SidebarExplorer(): React.JSX.Element {
 
 function TitleBarInset(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
-  const folderName = rootPath ? rootPath.split('/').pop() ?? rootPath : null
+  const folderName = rootPath ? basenameFromPath(rootPath) : null
   const { state } = useSidebar()
   const sidebarCollapsed = state === 'collapsed'
 
@@ -119,6 +123,9 @@ export function AppShell(): React.JSX.Element {
       className="h-dvh min-h-0 overflow-hidden"
       style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
     >
+      <KeyboardNavigationLayer />
+      <CommandPalette />
+      <WorkspaceSearchDialog />
       <Sidebar variant="inset" className="border-r-0">
         <SidebarExplorer />
         <SidebarResizeHandle />

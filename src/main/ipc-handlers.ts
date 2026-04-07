@@ -8,6 +8,7 @@ import {
   renameEntry,
   deleteEntry
 } from './lib/file-service'
+import { searchWorkspaceMarkdown } from './lib/workspace-search'
 import { startWatching } from './lib/file-watcher'
 import { getSession, saveSession } from './lib/session-store'
 
@@ -50,6 +51,10 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('fs:delete', async (_event, entryPath: string) => {
     await deleteEntry(entryPath)
+  })
+
+  ipcMain.handle('fs:searchWorkspace', async (_event, rootPath: string, query: string) => {
+    return searchWorkspaceMarkdown(rootPath, query)
   })
 
   ipcMain.handle('session:get', () => {
