@@ -15,6 +15,7 @@ import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
 import { CommandPalette } from '@/components/navigation/CommandPalette'
 import { WorkspaceSearchDialog } from '@/components/navigation/WorkspaceSearchDialog'
 import { basenameFromPath } from '@/lib/path-utils'
+import { AppearanceMenu } from '@/components/settings/AppearanceMenu'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useSidebarResize } from '@/hooks/use-sidebar-resize'
 import { FolderOpen } from 'lucide-react'
@@ -78,9 +79,10 @@ function TitleBarInset(): React.JSX.Element {
     >
       <SidebarTrigger className="-ml-1 text-muted-foreground/60 hover:text-foreground" />
       <Separator orientation="vertical" className="mr-1 !h-4 bg-border/40" />
-      <span className="text-[13px] font-medium text-foreground/60 select-none">
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/60 select-none">
         {folderName ?? 'md-editor'}
       </span>
+      <AppearanceMenu />
     </header>
   )
 }

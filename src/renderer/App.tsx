@@ -2,9 +2,12 @@ import { useEffect, useRef } from 'react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppShell } from '@/components/layout/AppShell'
 import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useAppearanceStore } from '@/stores/appearance-store'
+import { useAppearanceSystemListener } from '@/hooks/use-appearance-system-listener'
 
 function App(): React.JSX.Element {
   const initialized = useRef(false)
+  useAppearanceSystemListener()
 
   useEffect(() => {
     if (initialized.current) return
@@ -24,12 +27,20 @@ function App(): React.JSX.Element {
       if (session.activeFilePath) {
         store.setActiveTab(session.activeFilePath)
       }
+
+      useAppearanceStore.getState().hydrate({
+        themeMode: session.themeMode,
+        editorFontPreset: session.editorFontPreset,
+        editorFontSizePx: session.editorFontSizePx,
+        editorLineHeight: session.editorLineHeight
+      })
     })
   }, [])
 
   useEffect(() => {
     const saveInterval = setInterval(() => {
       const state = useWorkspaceStore.getState()
+      const appearance = useAppearanceStore.getState()
       window.electronAPI.saveSession({
         rootPath: state.rootPath,
         openFiles: state.openTabs.map((tab) => ({
@@ -37,12 +48,17 @@ function App(): React.JSX.Element {
           fileName: tab.fileName
         })),
         activeFilePath: state.activeTabPath,
-        sidebarWidth: state.sidebarWidth
+        sidebarWidth: state.sidebarWidth,
+        themeMode: appearance.themeMode,
+        editorFontPreset: appearance.editorFontPreset,
+        editorFontSizePx: appearance.editorFontSizePx,
+        editorLineHeight: appearance.editorLineHeight
       })
     }, 5000)
 
     const handleBeforeUnload = (): void => {
       const state = useWorkspaceStore.getState()
+      const appearance = useAppearanceStore.getState()
       window.electronAPI.saveSession({
         rootPath: state.rootPath,
         openFiles: state.openTabs.map((tab) => ({
@@ -50,7 +66,11 @@ function App(): React.JSX.Element {
           fileName: tab.fileName
         })),
         activeFilePath: state.activeTabPath,
-        sidebarWidth: state.sidebarWidth
+        sidebarWidth: state.sidebarWidth,
+        themeMode: appearance.themeMode,
+        editorFontPreset: appearance.editorFontPreset,
+        editorFontSizePx: appearance.editorFontSizePx,
+        editorLineHeight: appearance.editorLineHeight
       })
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
