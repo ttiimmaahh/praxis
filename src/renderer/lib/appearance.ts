@@ -47,4 +47,8 @@ export function applyAppearanceToDocument(state: AppearanceState): void {
   root.style.setProperty('--editor-line-height', String(state.editorLineHeight))
   /* Crepe reset.css uses fixed px sizes; scale them from a 16px baseline. */
   root.style.setProperty('--editor-scale', String(state.editorFontSizePx / 16))
+
+  if (window.electronAPI.platform !== 'darwin') {
+    void window.electronAPI.setTitleBarOverlay({ isDark: dark })
+  }
 }

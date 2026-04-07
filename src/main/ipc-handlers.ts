@@ -1,4 +1,5 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
+import { getTitleBarOverlayForIsDark } from './lib/title-bar-overlay'
 import {
   readDirectory,
   readFileContent,
@@ -63,5 +64,16 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('session:save', (_event, data: Record<string, unknown>) => {
     saveSession(data)
+  })
+
+  ipcMain.handle('window:setTitleBarOverlay', (event, payload: { isDark: boolean }) => {
+    if (process.platform === 'darwin') return
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) return
+    try {
+      win.setTitleBarOverlay(getTitleBarOverlayForIsDark(payload.isDark))
+    } catch (error) {
+      console.error('[window:setTitleBarOverlay]', error)
+    }
   })
 }

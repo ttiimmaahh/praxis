@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { getWindowState, trackWindowState } from './lib/window-state'
+import { getTitleBarOverlayOptions } from './lib/title-bar-overlay'
 import { registerIpcHandlers } from './ipc-handlers'
 
 const isMac = process.platform === 'darwin'
@@ -26,11 +27,7 @@ function createWindow(): BrowserWindow {
           backgroundColor: '#EDEDED'
         }
       : {
-          titleBarOverlay: {
-            color: '#eeeeee',
-            symbolColor: '#333333',
-            height: 38
-          }
+          titleBarOverlay: getTitleBarOverlayOptions()
         }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
