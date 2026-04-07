@@ -3,6 +3,8 @@ import { join } from 'path'
 import { getWindowState, trackWindowState } from './lib/window-state'
 import { registerIpcHandlers } from './ipc-handlers'
 
+const isMac = process.platform === 'darwin'
+
 function createWindow(): BrowserWindow {
   const state = getWindowState()
 
@@ -14,11 +16,21 @@ function createWindow(): BrowserWindow {
     minWidth: 680,
     minHeight: 400,
     show: false,
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 21 },
-    transparent: true,
-    vibrancy: 'sidebar',
-    visualEffectState: 'active',
+    titleBarStyle: 'hidden',
+    ...(isMac
+      ? {
+          trafficLightPosition: { x: 16, y: 21 },
+          transparent: true,
+          vibrancy: 'sidebar',
+          visualEffectState: 'active'
+        }
+      : {
+          titleBarOverlay: {
+            color: '#eeeeee',
+            symbolColor: '#333333',
+            height: 38
+          }
+        }),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false

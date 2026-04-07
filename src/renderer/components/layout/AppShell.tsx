@@ -17,6 +17,8 @@ import { FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
+const isMac = window.electronAPI.platform === 'darwin'
+
 function SidebarExplorer(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
 
@@ -66,7 +68,8 @@ function TitleBarInset(): React.JSX.Element {
     <header
       className={cn(
         'flex h-[38px] shrink-0 items-center gap-2 border-b border-border/50 px-3 app-drag-region transition-[padding] duration-200',
-        sidebarCollapsed && 'pl-[80px]'
+        isMac && sidebarCollapsed && 'pl-[80px]',
+        !isMac && 'pr-[140px]'
       )}
     >
       <SidebarTrigger className="-ml-1 text-muted-foreground/60 hover:text-foreground" />
