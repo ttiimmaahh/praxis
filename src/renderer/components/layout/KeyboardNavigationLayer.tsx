@@ -1,6 +1,11 @@
 import { useEffect } from 'react'
 import { useSidebar } from '@/components/ui/sidebar'
 import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useCourseStore } from '@/stores/course-store'
+import {
+  persistCourseProjectFilesExpanded,
+  useCourseSidebarStore
+} from '@/stores/course-sidebar-store'
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
@@ -48,6 +53,15 @@ export function KeyboardNavigationLayer(): React.JSX.Element {
       if (key === 'o' && event.shiftKey) {
         event.preventDefault()
         toggleOutline()
+        return
+      }
+
+      if (key === 'e' && event.shiftKey) {
+        if (isEditableTarget(event.target)) return
+        if (useCourseStore.getState().status !== 'ready') return
+        event.preventDefault()
+        useCourseSidebarStore.getState().toggleProjectFiles()
+        persistCourseProjectFilesExpanded()
         return
       }
 

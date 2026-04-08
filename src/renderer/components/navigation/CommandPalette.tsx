@@ -16,7 +16,23 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { useWorkspaceStore } from '@/stores/workspace-store'
-import { FileSearch, FolderOpen, LayoutPanelLeft, ListTree, Palette, Save, X } from 'lucide-react'
+import {
+  BookPlus,
+  FileSearch,
+  FolderOpen,
+  FolderPlus,
+  FolderTree,
+  LayoutPanelLeft,
+  ListTree,
+  Palette,
+  Save,
+  X
+} from 'lucide-react'
+import { useCourseStore } from '@/stores/course-store'
+import {
+  persistCourseProjectFilesExpanded,
+  useCourseSidebarStore
+} from '@/stores/course-sidebar-store'
 
 const isMac = window.electronAPI.platform === 'darwin'
 const mod = isMac ? '⌘' : 'Ctrl+'
@@ -29,6 +45,8 @@ export function CommandPalette(): React.JSX.Element {
   const setWorkspaceSearchOpen = useWorkspaceStore((s) => s.setWorkspaceSearchOpen)
   const toggleOutline = useWorkspaceStore((s) => s.toggleOutline)
   const outlineOpen = useWorkspaceStore((s) => s.outlineOpen)
+  const courseStatus = useCourseStore((s) => s.status)
+  const courseReady = courseStatus === 'ready'
 
   const canEdit = activeTabPath !== null
 
@@ -40,6 +58,7 @@ export function CommandPalette(): React.JSX.Element {
       workspaceSearch: `${mod}⇧F`,
       toggleSidebar: `${mod}B`,
       toggleOutline: `${mod}⇧O`,
+      toggleProjectFiles: `${mod}⇧E`,
       palette: `${mod}⇧P`
     }),
     []
@@ -108,6 +127,68 @@ export function CommandPalette(): React.JSX.Element {
                 <FileSearch className="text-muted-foreground" />
                 <span>Search in workspace…</span>
                 <span className="ml-auto text-xs text-muted-foreground">{shortcuts.workspaceSearch}</span>
+              </CommandItem>
+              <CommandItem
+                disabled={!rootPath || !courseReady}
+                onSelect={() => {
+                  setOpen(false)
+                  useCourseSidebarStore.getState().toggleProjectFiles()
+                  persistCourseProjectFilesExpanded()
+                }}
+              >
+                <FolderTree className="text-muted-foreground" />
+                <span>Toggle project files</span>
+                <span className="ml-auto text-xs text-muted-foreground">{shortcuts.toggleProjectFiles}</span>
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="Course">
+              <CommandItem
+                onSelect={async () => {
+                  setOpen(false)
+                  const result = await window.electronAPI.createNewCourseFolder()
+                  if (result === null) return
+                  if (result.ok) {
+                    useWorkspaceStore.getState().setRootPath(result.folderPath)
+                  } else {
+                    window.alert(result.error)
+                  }
+                }}
+              >
+                <BookPlus className="text-muted-foreground" />
+                <span>New course…</span>
+              </CommandItem>
+              <CommandItem
+                disabled={!rootPath || courseStatus !== 'no-manifest'}
+                onSelect={async () => {
+                  if (!rootPath) return
+                  setOpen(false)
+                  const result = await window.electronAPI.scaffoldCourseInWorkspace(rootPath)
+                  if (!result.ok) {
+                    window.alert(result.error)
+                    return
+                  }
+                  void useCourseStore.getState().loadForRoot(rootPath)
+                }}
+              >
+                <FolderPlus className="text-muted-foreground" />
+                <span>Start course in current folder</span>
+              </CommandItem>
+              <CommandItem
+                disabled={!rootPath || !courseReady}
+                onSelect={async () => {
+                  if (!rootPath) return
+                  setOpen(false)
+                  const result = await window.electronAPI.addCourseModule(rootPath)
+                  if (!result.ok) {
+                    window.alert(result.error)
+                    return
+                  }
+                  void useCourseStore.getState().loadForRoot(rootPath)
+                }}
+              >
+                <FolderPlus className="text-muted-foreground" />
+                <span>Add module</span>
               </CommandItem>
             </CommandGroup>
             <CommandSeparator />

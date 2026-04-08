@@ -10,6 +10,10 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileTree } from '@/components/file-tree/FileTree'
+import { CoursePanel } from '@/components/course/CoursePanel'
+import { ProjectFilesSection } from '@/components/course/ProjectFilesSection'
+import { SidebarCourseToolbar } from '@/components/course/SidebarCourseToolbar'
+import { useCourseStore } from '@/stores/course-store'
 import { EditorArea } from './EditorArea'
 import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
 import { CommandPalette } from '@/components/navigation/CommandPalette'
@@ -26,6 +30,8 @@ const isMac = window.electronAPI.platform === 'darwin'
 
 function SidebarExplorer(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
+  const courseStatus = useCourseStore((s) => s.status)
+  const courseReady = courseStatus === 'ready'
 
   async function handleOpenFolder(): Promise<void> {
     const result = await window.electronAPI.openFolder()
@@ -34,13 +40,45 @@ function SidebarExplorer(): React.JSX.Element {
     }
   }
 
+  async function handleScaffoldInCurrentFolder(): Promise<void> {
+    if (!rootPath) return
+    const result = await window.electronAPI.scaffoldCourseInWorkspace(rootPath)
+    if (!result.ok) {
+      window.alert(result.error)
+      return
+    }
+    void useCourseStore.getState().loadForRoot(rootPath)
+  }
+
   return (
     <>
-      <SidebarHeader className="h-[38px] app-drag-region" />
+      <SidebarHeader className="flex h-[38px] flex-row items-center justify-end gap-1 border-b border-border/40 px-2 py-0 app-drag-region">
+        <div className="pointer-events-auto flex items-center gap-0.5 no-drag">
+          <SidebarCourseToolbar />
+        </div>
+      </SidebarHeader>
       <SidebarContent>
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full min-w-0">
           {rootPath ? (
-            <FileTree />
+            <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col">
+              {courseStatus === 'no-manifest' ? (
+                <div className="border-b border-border/60 px-2 py-2">
+                  <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
+                    No course.yaml in this folder. Create a manifest and a starter module to begin.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => void handleScaffoldInCurrentFolder()}
+                  >
+                    Start course in this folder
+                  </Button>
+                </div>
+              ) : null}
+              <CoursePanel />
+              {courseReady ? <ProjectFilesSection /> : <FileTree />}
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
               <span className="text-[13px] font-medium text-sidebar-foreground/70">

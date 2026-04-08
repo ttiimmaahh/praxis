@@ -4,10 +4,13 @@ import { AppShell } from '@/components/layout/AppShell'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useAppearanceStore } from '@/stores/appearance-store'
 import { useAppearanceSystemListener } from '@/hooks/use-appearance-system-listener'
+import { useCourseManifestSync } from '@/hooks/use-course-manifest-sync'
+import { useCourseSidebarStore } from '@/stores/course-sidebar-store'
 
 function App(): React.JSX.Element {
   const initialized = useRef(false)
   useAppearanceSystemListener()
+  useCourseManifestSync()
 
   useEffect(() => {
     if (initialized.current) return
@@ -34,6 +37,10 @@ function App(): React.JSX.Element {
         editorFontSizePx: session.editorFontSizePx,
         editorLineHeight: session.editorLineHeight
       })
+
+      if (typeof session.courseProjectFilesExpanded === 'boolean') {
+        useCourseSidebarStore.getState().hydrate(session.courseProjectFilesExpanded)
+      }
     })
   }, [])
 
@@ -41,6 +48,7 @@ function App(): React.JSX.Element {
     const saveInterval = setInterval(() => {
       const state = useWorkspaceStore.getState()
       const appearance = useAppearanceStore.getState()
+      const courseSidebar = useCourseSidebarStore.getState()
       window.electronAPI.saveSession({
         rootPath: state.rootPath,
         openFiles: state.openTabs.map((tab) => ({
@@ -52,13 +60,15 @@ function App(): React.JSX.Element {
         themeMode: appearance.themeMode,
         editorFontPreset: appearance.editorFontPreset,
         editorFontSizePx: appearance.editorFontSizePx,
-        editorLineHeight: appearance.editorLineHeight
+        editorLineHeight: appearance.editorLineHeight,
+        courseProjectFilesExpanded: courseSidebar.projectFilesOpen
       })
     }, 5000)
 
     const handleBeforeUnload = (): void => {
       const state = useWorkspaceStore.getState()
       const appearance = useAppearanceStore.getState()
+      const courseSidebar = useCourseSidebarStore.getState()
       window.electronAPI.saveSession({
         rootPath: state.rootPath,
         openFiles: state.openTabs.map((tab) => ({
@@ -70,7 +80,8 @@ function App(): React.JSX.Element {
         themeMode: appearance.themeMode,
         editorFontPreset: appearance.editorFontPreset,
         editorFontSizePx: appearance.editorFontSizePx,
-        editorLineHeight: appearance.editorLineHeight
+        editorLineHeight: appearance.editorLineHeight,
+        courseProjectFilesExpanded: courseSidebar.projectFilesOpen
       })
     }
     window.addEventListener('beforeunload', handleBeforeUnload)

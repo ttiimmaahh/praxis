@@ -138,12 +138,20 @@ Implement the Course Engine module. When the user opens a folder containing a `c
 
 ### Acceptance criteria
 
-- [ ] Opening a folder with a valid `course.yaml` activates course-aware UI
-- [ ] The course title, modules, and lessons are displayed according to the manifest ordering
-- [ ] Validation warns about lessons referenced in the manifest but missing on disk
-- [ ] The "New Course" action creates a folder with a `course.yaml`, a first module folder, and a first lesson file
-- [ ] The user can add new modules and lessons from the course UI
-- [ ] Course features are completely invisible when no manifest is present
+- [x] Opening a folder with a valid `course.yaml` activates course-aware UI
+- [x] The course title, modules, and lessons are displayed according to the manifest ordering
+- [x] Validation warns about lessons referenced in the manifest but missing on disk
+- [x] The "New Course" action creates a folder with a `course.yaml`, a first module folder, and a first lesson file
+- [x] The user can add new modules and lessons from the course UI
+- [x] Course features are completely invisible when no manifest is present
+
+### Phase 6 implementation log
+
+1. **Course manifest (detection, parse, validate, UI)** — **Done.** Shared `course.yaml` schema and `validateCourseManifestStructure` in `src/shared/course-manifest.ts`; main `loadCourseManifest` reads root `course.yaml`, parses YAML, validates shape, checks module folders and lesson files on disk, returns warnings. IPC `course:loadManifest`; `course-store` + `useCourseManifestSync` reload on root change and file watcher events. Sidebar `CoursePanel` (shadcn `Alert` + `Collapsible`) shows invalid manifest errors, optional warnings, and ordered modules/lessons that open files in the workspace. No course UI when the file is absent. Lessons may be a filename string or `{ path, title }` for sidebar labels.
+
+2. **Course author sidebar** — **Done.** When a valid manifest is loaded (`course` status `ready`), the full file tree moves under a collapsible **Project files** section (default collapsed; state persisted as `courseProjectFilesExpanded` in session). Non-course workspaces and invalid manifests keep the full-height file tree. Command palette **Toggle project files** and **⌘⇧E** / **Ctrl+Shift+E** toggle the section when a course is active.
+
+3. **Course scaffold & authoring** — **Done.** Main-process `course-authoring.ts` writes validated `course.yaml` via `yaml` stringify + `validateCourseManifestStructure`. IPC: `course:createNewCourseFolder` (dialog with `createDirectory`, scaffold `01-module` + `lesson-01.md`, `startWatching`), `course:scaffold` for “Start course in this folder” when no manifest, `course:addModule` / `course:addLesson` append to `course.yaml` and create files. Sidebar header **BookPlus** opens new course; `no-manifest` workspace shows **Start course in this folder**; course outline **+** adds module (next `NN-module`) or lesson per module (`lesson-NN.md`). Command palette lists the same actions. Renderer calls `loadForRoot` after mutations so the sidebar updates (with existing file-watcher reload).
 
 ---
 
