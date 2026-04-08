@@ -31,9 +31,20 @@ const electronAPI = {
 
   loadCourseManifest: (rootPath: string) => ipcRenderer.invoke('course:loadManifest', rootPath),
 
-  createNewCourseFolder: () => ipcRenderer.invoke('course:createNewCourseFolder'),
+  createNewCourseFolder: (templateId?: string, courseName?: string) =>
+    ipcRenderer.invoke('course:createNewCourseFolder', templateId, courseName),
 
-  scaffoldCourseInWorkspace: (courseRoot: string) => ipcRenderer.invoke('course:scaffold', courseRoot),
+  scaffoldCourseInWorkspace: (courseRoot: string, templateId?: string) =>
+    ipcRenderer.invoke('course:scaffold', courseRoot, templateId),
+
+  listTemplates: () => ipcRenderer.invoke('templates:list'),
+
+  getTemplatesDir: (): Promise<string> => ipcRenderer.invoke('templates:getDir'),
+
+  openTemplatesDir: (): Promise<void> => ipcRenderer.invoke('templates:openDir'),
+
+  setTemplatesDir: (dir: string | null): Promise<void> =>
+    ipcRenderer.invoke('templates:setDir', dir),
 
   addCourseModule: (courseRoot: string) => ipcRenderer.invoke('course:addModule', courseRoot),
 

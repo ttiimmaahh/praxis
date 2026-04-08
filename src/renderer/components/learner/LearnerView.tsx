@@ -5,6 +5,14 @@ import { joinWorkspacePath } from '@/lib/path-utils'
 import { LessonReader } from './LessonReader'
 import { LessonNavigation } from './LessonNavigation'
 
+function stripFrontmatter(content: string): string {
+  const text = content.replace(/^\uFEFF/, '')
+  if (!text.startsWith('---')) return content
+  const end = text.indexOf('\n---', 3)
+  if (end === -1) return content
+  return text.slice(end + 4)
+}
+
 export function LearnerView(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
   const flatLessons = useLearnerStore((s) => s.flatLessons)
@@ -25,7 +33,7 @@ export function LearnerView(): React.JSX.Element {
     window.electronAPI
       .readFile(fullPath)
       .then((content) => {
-        if (!cancelled) setLessonContent(content)
+        if (!cancelled) setLessonContent(stripFrontmatter(content))
       })
       .catch(() => {
         if (!cancelled) setLessonContent('> **Error**: Could not load this lesson file.')

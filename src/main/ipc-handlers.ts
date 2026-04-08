@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, ipcMain } from 'electron'
+import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { getTitleBarOverlayForIsDark } from './lib/title-bar-overlay'
 import {
   readDirectory,
@@ -23,8 +23,20 @@ import {
   markLessonComplete,
   unmarkLessonComplete
 } from './lib/progress-store'
+import {
+  listTemplates,
+  getTemplatesDir,
+  setCustomTemplatesDir,
+  ensureTemplatesSeeded
+} from './lib/template-store'
 
 export function registerIpcHandlers(): void {
+  // Initialize custom templates dir from saved session
+  const session = getSession()
+  if (session.templatesDir) {
+    setCustomTemplatesDir(session.templatesDir)
+  }
+
   ipcMain.handle('dialog:openFolder', async () => {
     const window = BrowserWindow.getFocusedWindow()
     if (!window) return null
@@ -73,33 +85,70 @@ export function registerIpcHandlers(): void {
     return loadCourseManifest(rootPath)
   })
 
-  ipcMain.handle('course:createNewCourseFolder', async () => {
-    const window = BrowserWindow.getFocusedWindow()
-    if (!window) return null
-    const result = await dialog.showOpenDialog(window, {
-      properties: ['openDirectory', 'createDirectory'],
-      title: 'Select or create a folder for the new course'
-    })
-    if (result.canceled || result.filePaths.length === 0) return null
-    const folderPath = result.filePaths[0]
-    const scaffoldResult = await scaffoldCourse(folderPath)
-    if (!scaffoldResult.ok) {
-      return { ok: false as const, error: scaffoldResult.error }
-    }
-    await startWatching(folderPath)
-    return { ok: true as const, folderPath }
-  })
+  ipcMain.handle(
+    'course:createNewCourseFolder',
+    async (_event, templateId?: string, courseName?: string) => {
+      const window = BrowserWindow.getFocusedWindow()
+      if (!window) return null
+      const result = await dialog.showOpenDialog(window, {
+        properties: ['openDirectory', 'createDirectory'],
+        title: 'Choose where to create the course folder'
+      })
+      if (result.canceled || result.filePaths.length === 0) return null
 
-  ipcMain.handle('course:scaffold', async (_event, courseRoot: string) => {
+      const parentPath = result.filePaths[0]
+      let courseFolder: string
+
+      if (courseName && courseName.trim().length > 0) {
+        const { mkdir } = await import('fs/promises')
+        const { join } = await import('path')
+        courseFolder = join(parentPath, courseName.trim())
+        try {
+          await mkdir(courseFolder, { recursive: true })
+        } catch {
+          return { ok: false as const, error: `Could not create folder "${courseName.trim()}".` }
+        }
+      } else {
+        courseFolder = parentPath
+      }
+
+      const scaffoldResult = await scaffoldCourse(courseFolder, templateId, courseName?.trim())
+      if (!scaffoldResult.ok) {
+        return { ok: false as const, error: scaffoldResult.error }
+      }
+      await startWatching(courseFolder)
+      return { ok: true as const, folderPath: courseFolder }
+    }
+  )
+
+  ipcMain.handle('course:scaffold', async (_event, courseRoot: string, templateId?: string) => {
     if (typeof courseRoot !== 'string' || courseRoot.trim() === '') {
       return { ok: false as const, error: 'Invalid path.' }
     }
-    const scaffoldResult = await scaffoldCourse(courseRoot)
+    const scaffoldResult = await scaffoldCourse(courseRoot, templateId)
     if (!scaffoldResult.ok) {
       return scaffoldResult
     }
     await startWatching(courseRoot)
     return { ok: true as const }
+  })
+
+  ipcMain.handle('templates:list', () => {
+    return listTemplates()
+  })
+
+  ipcMain.handle('templates:getDir', () => {
+    return getTemplatesDir()
+  })
+
+  ipcMain.handle('templates:openDir', async () => {
+    const dir = getTemplatesDir()
+    ensureTemplatesSeeded()
+    await shell.openPath(dir)
+  })
+
+  ipcMain.handle('templates:setDir', (_event, dir: string | null) => {
+    setCustomTemplatesDir(dir)
   })
 
   ipcMain.handle('course:addModule', async (_event, courseRoot: string) => {

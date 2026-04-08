@@ -78,7 +78,7 @@ const CrepeEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
           [CrepeFeature.Table]: true,
           [CrepeFeature.Cursor]: true,
           [CrepeFeature.Latex]: false,
-          [CrepeFeature.TopBar]: false
+          [CrepeFeature.TopBar]: true
         },
         featureConfigs: {
           [CrepeFeature.Placeholder]: {
@@ -100,7 +100,51 @@ const CrepeEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorProps>(
       return crepe
     }, [])
 
-    return <Milkdown />
+    // Add tooltips to TopBar buttons (Crepe doesn't support them natively)
+    const milkdownRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+      const container = milkdownRef.current
+      if (!container) return
+
+      const BUTTON_TOOLTIPS = [
+        'Bold',
+        'Italic',
+        'Strikethrough',
+        'Inline Code',
+        'Bullet List',
+        'Ordered List',
+        'Task List',
+        'Link',
+        'Image',
+        'Table',
+        'Code Block',
+        'Quote',
+        'Horizontal Rule'
+      ]
+
+      function applyTooltips(): void {
+        const buttons = container!.querySelectorAll<HTMLButtonElement>(
+          '.milkdown-top-bar .top-bar-item'
+        )
+        buttons.forEach((btn, i) => {
+          if (i < BUTTON_TOOLTIPS.length && !btn.title) {
+            btn.title = BUTTON_TOOLTIPS[i]
+          }
+        })
+      }
+
+      // Apply once the TopBar renders (may be delayed)
+      applyTooltips()
+      const observer = new MutationObserver(() => applyTooltips())
+      observer.observe(container, { childList: true, subtree: true })
+      return () => observer.disconnect()
+    }, [])
+
+    return (
+      <div ref={milkdownRef}>
+        <Milkdown />
+      </div>
+    )
   }
 )
 

@@ -37,9 +37,20 @@ export interface CourseModuleManifest {
   lessons: CourseLessonRef[]
 }
 
+export interface SchemaField {
+  name: string
+  required: boolean
+  type: 'string' | 'number'
+}
+
+export interface CourseSchema {
+  lessonFields: SchemaField[]
+}
+
 export interface CourseManifestParsed {
   title: string
   modules: CourseModuleManifest[]
+  schema?: CourseSchema
 }
 
 /** Result of reading and validating `course.yaml` on disk (main process). */
@@ -126,6 +137,41 @@ export function validateCourseManifestStructure(
     })
   }
 
+  // Validate optional schema
+  let schema: CourseSchema | undefined
+  if (root.schema !== undefined && root.schema !== null) {
+    if (typeof root.schema !== 'object' || Array.isArray(root.schema)) {
+      errors.push('Field `schema` must be an object when set.')
+    } else {
+      const s = root.schema as Record<string, unknown>
+      if (!Array.isArray(s.lessonFields)) {
+        errors.push('Field `schema.lessonFields` must be an array.')
+      } else {
+        const fields: SchemaField[] = []
+        s.lessonFields.forEach((field, i) => {
+          if (field === null || typeof field !== 'object' || Array.isArray(field)) {
+            errors.push(`schema.lessonFields[${i}]: must be an object.`)
+            return
+          }
+          const f = field as Record<string, unknown>
+          if (!isNonEmptyString(f.name)) {
+            errors.push(`schema.lessonFields[${i}].name must be a non-empty string.`)
+            return
+          }
+          const fieldType = f.type === 'number' ? 'number' : 'string'
+          fields.push({
+            name: (f.name as string).trim(),
+            required: f.required === true,
+            type: fieldType
+          })
+        })
+        if (errors.length === 0) {
+          schema = { lessonFields: fields }
+        }
+      }
+    }
+  }
+
   if (errors.length > 0) {
     return { ok: false, errors }
   }
@@ -157,7 +203,8 @@ export function validateCourseManifestStructure(
     ok: true,
     manifest: {
       title: (root.title as string).trim(),
-      modules
+      modules,
+      ...(schema ? { schema } : {})
     }
   }
 }

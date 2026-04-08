@@ -16,6 +16,8 @@ interface SessionData {
   courseProjectFilesExpanded?: boolean
   /** Whether to reopen the last folder on app launch. Defaults to false. */
   reopenLastFolder?: boolean
+  /** Custom templates directory path. If unset, uses default userData/templates/. */
+  templatesDir?: string
 }
 
 const DEFAULTS: SessionData = {

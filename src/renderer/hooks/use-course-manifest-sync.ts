@@ -21,15 +21,18 @@ export function useCourseManifestSync(): void {
   }, [rootPath, loadForRoot])
 
   // Auto-enter learner mode when a course manifest becomes ready
+  // (skipped when a course was just scaffolded — creator should land in edit mode)
   useEffect(() => {
     const unsubscribe = useCourseStore.subscribe((state, prev) => {
       if (state.status === 'ready' && prev.status !== 'ready' && state.manifest) {
+        const ws = useWorkspaceStore.getState()
+        if (ws.suppressLearnerAutoEnter) {
+          ws.setSuppressLearnerAutoEnter(false)
+          return
+        }
         const learner = useLearnerStore.getState()
-        if (!learner.active) {
-          const root = useWorkspaceStore.getState().rootPath
-          if (root) {
-            void learner.enter(state.manifest, root)
-          }
+        if (!learner.active && ws.rootPath) {
+          void learner.enter(state.manifest, ws.rootPath)
         }
       }
     })

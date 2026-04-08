@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator'
 import { useAppearanceStore } from '@/stores/appearance-store'
 import { cn } from '@/lib/utils'
-import { Settings } from 'lucide-react'
+import { FolderOpen, RotateCcw, Settings } from 'lucide-react'
 
 const THEME_OPTIONS: Array<{ value: 'light' | 'dark' | 'system'; label: string }> = [
   { value: 'light', label: 'Light' },
@@ -30,16 +30,37 @@ export function SettingsMenu(): React.JSX.Element {
   const setEditorLineHeight = useAppearanceStore((s) => s.setEditorLineHeight)
 
   const [reopenLastFolder, setReopenLastFolder] = useState(false)
+  const [templatesDir, setTemplatesDir] = useState('')
+  const [isCustomDir, setIsCustomDir] = useState(false)
 
   useEffect(() => {
     window.electronAPI.getSession().then((session) => {
       setReopenLastFolder(session.reopenLastFolder ?? false)
+      setIsCustomDir(!!session.templatesDir)
     })
+    window.electronAPI.getTemplatesDir().then(setTemplatesDir)
   }, [])
 
   function handleReopenToggle(checked: boolean): void {
     setReopenLastFolder(checked)
     window.electronAPI.saveSession({ reopenLastFolder: checked })
+  }
+
+  async function handleChangeTemplatesDir(): Promise<void> {
+    const result = await window.electronAPI.openFolder()
+    if (!result) return
+    await window.electronAPI.setTemplatesDir(result)
+    await window.electronAPI.saveSession({ templatesDir: result })
+    setTemplatesDir(result)
+    setIsCustomDir(true)
+  }
+
+  async function handleResetTemplatesDir(): Promise<void> {
+    await window.electronAPI.setTemplatesDir(null)
+    await window.electronAPI.saveSession({ templatesDir: undefined })
+    const dir = await window.electronAPI.getTemplatesDir()
+    setTemplatesDir(dir)
+    setIsCustomDir(false)
   }
 
   return (
@@ -150,6 +171,46 @@ export function SettingsMenu(): React.JSX.Element {
             />
             <span className="text-[13px] text-foreground">Reopen last folder on launch</span>
           </label>
+        </div>
+
+        {/* ── Templates ── */}
+        <Separator />
+
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Templates</p>
+          <p className="mt-2 break-all text-[11px] leading-snug text-muted-foreground/70">
+            {templatesDir}
+          </p>
+          <div className="mt-2 flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              onClick={() => void window.electronAPI.openTemplatesDir()}
+            >
+              <FolderOpen className="h-3 w-3" />
+              Open
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => void handleChangeTemplatesDir()}
+            >
+              Change…
+            </Button>
+            {isCustomDir && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 text-xs text-muted-foreground"
+                onClick={() => void handleResetTemplatesDir()}
+              >
+                <RotateCcw className="h-3 w-3" />
+                Reset
+              </Button>
+            )}
+          </div>
         </div>
 
         <p className="text-[10px] leading-relaxed text-muted-foreground/60">

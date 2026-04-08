@@ -13,6 +13,28 @@ import { cn } from '@/lib/utils'
 
 const fileContentCache = new Map<string, string>()
 
+/** Stored frontmatter blocks keyed by file path — Milkdown can't edit these. */
+const frontmatterCache = new Map<string, string>()
+
+function splitFrontmatter(content: string): { frontmatter: string; body: string } {
+  const text = content.replace(/^\uFEFF/, '')
+  if (!text.startsWith('---')) return { frontmatter: '', body: content }
+  const end = text.indexOf('\n---', 3)
+  if (end === -1) return { frontmatter: '', body: content }
+  // Include the closing --- and the newline after it
+  const fmEnd = end + 4
+  return {
+    frontmatter: text.slice(0, fmEnd),
+    body: text.slice(fmEnd)
+  }
+}
+
+function joinFrontmatter(filePath: string, body: string): string {
+  const fm = frontmatterCache.get(filePath)
+  if (!fm) return body
+  return fm + body
+}
+
 export function EditorArea(): React.JSX.Element {
   const openTabs = useWorkspaceStore((s) => s.openTabs)
   const activeTabPath = useWorkspaceStore((s) => s.activeTabPath)
@@ -39,9 +61,18 @@ export function EditorArea(): React.JSX.Element {
 
     const cached = fileContentCache.get(activeTabPath)
     if (cached !== undefined) {
-      setLoadedContent(cached)
-      setLoadedContentPath(activeTabPath)
-      setLiveMarkdown(cached)
+      const isMarkdown = !isYamlFilePath(activeTabPath)
+      if (isMarkdown) {
+        const { frontmatter, body } = splitFrontmatter(cached)
+        if (frontmatter) frontmatterCache.set(activeTabPath, frontmatter)
+        setLoadedContent(body)
+        setLoadedContentPath(activeTabPath)
+        setLiveMarkdown(body)
+      } else {
+        setLoadedContent(cached)
+        setLoadedContentPath(activeTabPath)
+        setLiveMarkdown(cached)
+      }
       return
     }
 
@@ -52,9 +83,22 @@ export function EditorArea(): React.JSX.Element {
       .then((content) => {
         if (cancelled) return
         fileContentCache.set(activeTabPath, content)
-        setLoadedContent(content)
-        setLoadedContentPath(activeTabPath)
-        setLiveMarkdown(content)
+        const isMarkdown = !isYamlFilePath(activeTabPath)
+        if (isMarkdown) {
+          const { frontmatter, body } = splitFrontmatter(content)
+          if (frontmatter) {
+            frontmatterCache.set(activeTabPath, frontmatter)
+          } else {
+            frontmatterCache.delete(activeTabPath)
+          }
+          setLoadedContent(body)
+          setLoadedContentPath(activeTabPath)
+          setLiveMarkdown(body)
+        } else {
+          setLoadedContent(content)
+          setLoadedContentPath(activeTabPath)
+          setLiveMarkdown(content)
+        }
       })
       .catch((error) => {
         if (cancelled) return
@@ -74,7 +118,11 @@ export function EditorArea(): React.JSX.Element {
 
   const handleContentChange = useCallback(
     (filePath: string, newContent: string) => {
-      fileContentCache.set(filePath, newContent)
+      // For markdown files, rejoin frontmatter for storage/saving
+      const fullContent = !isYamlFilePath(filePath)
+        ? joinFrontmatter(filePath, newContent)
+        : newContent
+      fileContentCache.set(filePath, fullContent)
       if (filePath === activeTabPath) {
         setLiveMarkdown(newContent)
       }
@@ -86,7 +134,7 @@ export function EditorArea(): React.JSX.Element {
       const timerId = setTimeout(async () => {
         saveTimersRef.current.delete(filePath)
         try {
-          await window.electronAPI.writeFile(filePath, newContent)
+          await window.electronAPI.writeFile(filePath, fullContent)
           markDirty(filePath, false)
           const courseStatus = useCourseStore.getState().status
           if (shouldReloadCourseManifestAfterSave(filePath, rootPath, courseStatus)) {

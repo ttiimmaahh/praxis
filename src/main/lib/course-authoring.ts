@@ -2,6 +2,7 @@ import { mkdir, readFile, readdir, stat, writeFile } from 'fs/promises'
 import { basename, join } from 'path'
 import { parse, stringify } from 'yaml'
 import { validateCourseManifestStructure } from '../../shared/course-manifest'
+import { loadTemplate } from './template-store'
 
 export type CourseAuthoringResult = { ok: true } | { ok: false; error: string }
 
@@ -55,8 +56,12 @@ async function readManifestObject(courseRoot: string): Promise<
   return { ok: true, path: manifestPath, data }
 }
 
-/** Creates course.yaml, 01-module/, and lesson-01.md. Fails if course.yaml already exists. */
-export async function scaffoldCourse(courseRoot: string): Promise<CourseAuthoringResult> {
+/** Creates course.yaml, module folders, and lesson files from a template. Fails if course.yaml already exists. */
+export async function scaffoldCourse(
+  courseRoot: string,
+  templateId?: string,
+  courseTitle?: string
+): Promise<CourseAuthoringResult> {
   const manifestPath = join(courseRoot, 'course.yaml')
   try {
     await stat(manifestPath)
@@ -65,18 +70,42 @@ export async function scaffoldCourse(courseRoot: string): Promise<CourseAuthorin
     // expected: no file
   }
 
-  const courseTitle = basename(courseRoot) || 'New Course'
+  const title = courseTitle?.trim() || basename(courseRoot) || 'New Course'
+  const template = templateId ? loadTemplate(templateId) : null
+
+  if (template) {
+    // Scaffold from template definition
+    for (const mod of template.modules) {
+      const moduleDir = join(courseRoot, mod.folder)
+      await mkdir(moduleDir, { recursive: true })
+      for (const lesson of mod.lessons) {
+        await writeFile(join(moduleDir, lesson.file), lesson.body, 'utf-8')
+      }
+    }
+
+    const doc: Record<string, unknown> = {
+      title,
+      ...(template.schema ? { schema: template.schema } : {}),
+      modules: template.modules.map((mod) => ({
+        path: mod.folder,
+        title: mod.title,
+        lessons: mod.lessons.map((l) => l.file)
+      }))
+    }
+    return writeValidatedManifest(manifestPath, doc)
+  }
+
+  // Fallback: minimal scaffold (same as blank template)
   const moduleFolder = '01-module'
   const moduleDir = join(courseRoot, moduleFolder)
   const lessonFile = 'lesson-01.md'
 
   await mkdir(moduleDir, { recursive: true })
-  const lessonBody =
-    '# Lesson 1: New lesson\n\nStart writing your lesson here.\n'
+  const lessonBody = '# Lesson 1: New lesson\n\nStart writing your lesson here.\n'
   await writeFile(join(moduleDir, lessonFile), lessonBody, 'utf-8')
 
   const doc: Record<string, unknown> = {
-    title: courseTitle,
+    title,
     modules: [
       {
         path: moduleFolder,

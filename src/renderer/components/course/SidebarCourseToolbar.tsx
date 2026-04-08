@@ -11,16 +11,8 @@ export function SidebarCourseToolbar(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
   const learnerActive = useLearnerStore((s) => s.active)
 
-  async function handleNewCourse(): Promise<void> {
-    const result = await window.electronAPI.createNewCourseFolder()
-    if (result === null) {
-      return
-    }
-    if (result.ok) {
-      useWorkspaceStore.getState().setRootPath(result.folderPath)
-      return
-    }
-    window.alert(result.error)
+  function handleNewCourse(): void {
+    useWorkspaceStore.getState().openTemplatePicker('new')
   }
 
   function handleToggleMode(): void {
@@ -65,7 +57,7 @@ export function SidebarCourseToolbar(): React.JSX.Element {
               size="icon"
               className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
               aria-label="New course"
-              onClick={() => void handleNewCourse()}
+              onClick={handleNewCourse}
             >
               <BookPlus className="size-4" />
             </Button>

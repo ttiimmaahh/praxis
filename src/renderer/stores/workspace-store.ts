@@ -14,6 +14,11 @@ interface WorkspaceState {
   outlineOpen: boolean
   commandPaletteOpen: boolean
   workspaceSearchOpen: boolean
+  templatePickerOpen: boolean
+  /** 'new' = create new course folder, 'scaffold' = scaffold in current folder */
+  templatePickerMode: 'new' | 'scaffold'
+  /** When true, skip auto-entering learner mode on next manifest load (e.g. after scaffolding) */
+  suppressLearnerAutoEnter: boolean
 
   setRootPath: (path: string | null) => void
   openFile: (filePath: string, fileName: string) => void
@@ -25,6 +30,9 @@ interface WorkspaceState {
   toggleOutline: () => void
   setCommandPaletteOpen: (open: boolean) => void
   setWorkspaceSearchOpen: (open: boolean) => void
+  setTemplatePickerOpen: (open: boolean) => void
+  openTemplatePicker: (mode: 'new' | 'scaffold') => void
+  setSuppressLearnerAutoEnter: (suppress: boolean) => void
 }
 
 export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
@@ -35,6 +43,9 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
   outlineOpen: true,
   commandPaletteOpen: false,
   workspaceSearchOpen: false,
+  templatePickerOpen: false,
+  templatePickerMode: 'new' as const,
+  suppressLearnerAutoEnter: false,
 
   setRootPath: (path) => set({ rootPath: path }),
 
@@ -80,5 +91,11 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
 
   setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
 
-  setWorkspaceSearchOpen: (open) => set({ workspaceSearchOpen: open })
+  setWorkspaceSearchOpen: (open) => set({ workspaceSearchOpen: open }),
+
+  setTemplatePickerOpen: (open) => set({ templatePickerOpen: open }),
+
+  openTemplatePicker: (mode) => set({ templatePickerOpen: true, templatePickerMode: mode }),
+
+  setSuppressLearnerAutoEnter: (suppress) => set({ suppressLearnerAutoEnter: suppress })
 }))
