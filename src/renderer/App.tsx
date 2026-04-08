@@ -18,17 +18,17 @@ function App(): React.JSX.Element {
 
     window.electronAPI.getSession().then((session) => {
       const store = useWorkspaceStore.getState()
-      if (session.rootPath) {
+      if (session.reopenLastFolder && session.rootPath) {
         store.setRootPath(session.rootPath)
+        for (const file of session.openFiles ?? []) {
+          store.openFile(file.filePath, file.fileName)
+        }
+        if (session.activeFilePath) {
+          store.setActiveTab(session.activeFilePath)
+        }
       }
       if (session.sidebarWidth) {
         store.setSidebarWidth(session.sidebarWidth)
-      }
-      for (const file of session.openFiles ?? []) {
-        store.openFile(file.filePath, file.fileName)
-      }
-      if (session.activeFilePath) {
-        store.setActiveTab(session.activeFilePath)
       }
 
       useAppearanceStore.getState().hydrate({

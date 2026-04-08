@@ -18,9 +18,12 @@ import { EditorArea } from './EditorArea'
 import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
 import { CommandPalette } from '@/components/navigation/CommandPalette'
 import { WorkspaceSearchDialog } from '@/components/navigation/WorkspaceSearchDialog'
+import { LearnerView } from '@/components/learner/LearnerView'
+import { LearnerOutline } from '@/components/learner/LearnerOutline'
 import { basenameFromPath } from '@/lib/path-utils'
-import { AppearanceMenu } from '@/components/settings/AppearanceMenu'
+import { SettingsMenu } from '@/components/settings/SettingsMenu'
 import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useLearnerStore } from '@/stores/learner-store'
 import { useSidebarResize } from '@/hooks/use-sidebar-resize'
 import { FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -32,6 +35,7 @@ function SidebarExplorer(): React.JSX.Element {
   const rootPath = useWorkspaceStore((s) => s.rootPath)
   const courseStatus = useCourseStore((s) => s.status)
   const courseReady = courseStatus === 'ready'
+  const learnerActive = useLearnerStore((s) => s.active)
 
   async function handleOpenFolder(): Promise<void> {
     const result = await window.electronAPI.openFolder()
@@ -59,7 +63,9 @@ function SidebarExplorer(): React.JSX.Element {
       </SidebarHeader>
       <SidebarContent>
         <ScrollArea className="h-full min-w-0">
-          {rootPath ? (
+          {learnerActive ? (
+            <LearnerOutline />
+          ) : rootPath ? (
             <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col">
               {courseStatus === 'no-manifest' ? (
                 <div className="border-b border-border/60 px-2 py-2">
@@ -120,7 +126,7 @@ function TitleBarInset(): React.JSX.Element {
       <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/60 select-none">
         {folderName ?? 'md-editor'}
       </span>
-      <AppearanceMenu />
+      <SettingsMenu />
     </header>
   )
 }
@@ -157,6 +163,7 @@ function SidebarResizeHandle(): React.JSX.Element {
 
 export function AppShell(): React.JSX.Element {
   const sidebarWidth = useWorkspaceStore((s) => s.sidebarWidth)
+  const learnerActive = useLearnerStore((s) => s.active)
 
   return (
     <SidebarProvider
@@ -173,7 +180,7 @@ export function AppShell(): React.JSX.Element {
       <SidebarInset className="min-h-0 ring-0 peer-data-[variant=inset]:shadow-none">
         <TitleBarInset />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <EditorArea />
+          {learnerActive ? <LearnerView /> : <EditorArea />}
         </div>
       </SidebarInset>
     </SidebarProvider>

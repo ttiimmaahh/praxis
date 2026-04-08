@@ -18,6 +18,11 @@ import {
   addModuleToCourse,
   addLessonToModule
 } from './lib/course-authoring'
+import {
+  getCourseProgress,
+  markLessonComplete,
+  unmarkLessonComplete
+} from './lib/progress-store'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle('dialog:openFolder', async () => {
@@ -118,6 +123,24 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('session:save', (_event, data: Record<string, unknown>) => {
     saveSession(data)
   })
+
+  ipcMain.handle('progress:get', (_event, courseRoot: string) => {
+    return getCourseProgress(courseRoot)
+  })
+
+  ipcMain.handle(
+    'progress:markComplete',
+    (_event, courseRoot: string, modulePath: string, lessonPath: string) => {
+      return markLessonComplete(courseRoot, modulePath, lessonPath)
+    }
+  )
+
+  ipcMain.handle(
+    'progress:unmarkComplete',
+    (_event, courseRoot: string, modulePath: string, lessonPath: string) => {
+      return unmarkLessonComplete(courseRoot, modulePath, lessonPath)
+    }
+  )
 
   ipcMain.handle('window:setTitleBarOverlay', (event, payload: { isDark: boolean }) => {
     if (process.platform === 'darwin') return

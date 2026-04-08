@@ -44,6 +44,10 @@ type CreateNewCourseFolderResult =
   | { ok: true; folderPath: string }
   | { ok: false; error: string }
 
+interface CourseProgress {
+  completedLessons: string[]
+}
+
 type ThemeMode = 'light' | 'dark' | 'system'
 type EditorFontPreset = 'system' | 'serif' | 'mono'
 
@@ -57,6 +61,7 @@ interface SessionData {
   editorFontSizePx?: number
   editorLineHeight?: number
   courseProjectFilesExpanded?: boolean
+  reopenLastFolder?: boolean
 }
 
 interface ElectronAPI {
@@ -75,6 +80,9 @@ interface ElectronAPI {
   scaffoldCourseInWorkspace: (courseRoot: string) => Promise<CourseAuthoringResult>
   addCourseModule: (courseRoot: string) => Promise<CourseAuthoringResult>
   addCourseLesson: (courseRoot: string, modulePath: string) => Promise<CourseAuthoringResult>
+  getCourseProgress: (courseRoot: string) => Promise<CourseProgress>
+  markLessonComplete: (courseRoot: string, modulePath: string, lessonPath: string) => Promise<CourseProgress>
+  unmarkLessonComplete: (courseRoot: string, modulePath: string, lessonPath: string) => Promise<CourseProgress>
   getSession: () => Promise<SessionData>
   saveSession: (data: Partial<SessionData>) => Promise<void>
   setTitleBarOverlay: (options: { isDark: boolean }) => Promise<void>
