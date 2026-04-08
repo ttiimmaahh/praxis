@@ -210,109 +210,33 @@
   transition-duration: 0s !important;
 }
 
-.milkdown {
-  --crepe-font-default: var(--editor-font-body);
-  --crepe-font-title: var(--editor-font-title);
-  /* Crepe reset.css sets explicit px on .ProseMirror children; overrides below apply scale + line-height. */
-  --crepe-color-background: oklch(1 0 0);
-  --crepe-color-on-background: oklch(0.145 0 0);
-  --crepe-color-surface: oklch(0.97 0 0);
-  --crepe-color-surface-low: oklch(0.935 0 0);
-  --crepe-color-on-surface: oklch(0.205 0 0);
-  --crepe-color-on-surface-variant: oklch(0.556 0 0);
-  --crepe-color-outline: oklch(0.708 0 0);
-  --crepe-color-primary: oklch(0.205 0 0);
-  --crepe-color-secondary: oklch(0.922 0 0);
-  --crepe-color-on-secondary: oklch(0.145 0 0);
-  --crepe-color-inverse: oklch(0.97 0 0);
-  --crepe-color-on-inverse: oklch(0.205 0 0);
-  --crepe-color-inline-code: oklch(0.577 0.245 27.325);
-  --crepe-color-error: oklch(0.577 0.245 27.325);
-  --crepe-color-hover: oklch(0.97 0 0);
-  --crepe-color-selected: oklch(0.935 0 0);
-  --crepe-color-inline-area: oklch(0.922 0 0);
-
-  --crepe-font-code: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-
-  --crepe-shadow-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.12);
-  --crepe-shadow-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.12);
-
-  min-height: 100%;
-  border: none !important;
-  outline: none !important;
+/* Plate editor — font scaling & line-height from appearance settings */
+[data-slate-editor] {
+  font-family: var(--editor-font-body);
+  font-size: calc(16px * var(--editor-scale, 1));
+  line-height: var(--editor-line-height, 1.65);
 }
 
-.milkdown .editor,
-.milkdown .ProseMirror {
-  padding: 2rem 2.5rem !important;
-  max-width: none;
-  margin: 0;
+[data-slate-editor] h1 {
+  font-size: calc(42px * var(--editor-scale, 1));
 }
 
-/*
- * Crepe theme/common/reset.css sets fixed px font sizes on headings and paragraphs.
- * Those beat inherited font-size from .milkdown; scale by --editor-scale (baseline 16px)
- * and apply unitless line-height from appearance settings.
- */
-.milkdown .ProseMirror {
-  font-size: calc(16px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
+[data-slate-editor] h2 {
+  font-size: calc(36px * var(--editor-scale, 1));
 }
 
-.milkdown .ProseMirror p {
-  font-size: calc(16px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
+[data-slate-editor] h3 {
+  font-size: calc(32px * var(--editor-scale, 1));
 }
 
-.milkdown .ProseMirror h1 {
-  font-size: calc(42px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
+[data-slate-editor] h4 {
+  font-size: calc(28px * var(--editor-scale, 1));
 }
 
-.milkdown .ProseMirror h2 {
-  font-size: calc(36px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
+[data-slate-editor] h5 {
+  font-size: calc(24px * var(--editor-scale, 1));
 }
 
-.milkdown .ProseMirror h3 {
-  font-size: calc(32px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
-}
-
-.milkdown .ProseMirror h4 {
-  font-size: calc(28px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
-}
-
-.milkdown .ProseMirror h5 {
-  font-size: calc(24px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
-}
-
-.milkdown .ProseMirror h6 {
-  font-size: calc(18px * var(--editor-scale, 1)) !important;
-  line-height: var(--editor-line-height, 1.65) !important;
-}
-
-.dark .milkdown {
-  --crepe-color-background: oklch(0.145 0 0);
-  --crepe-color-on-background: oklch(0.985 0 0);
-  --crepe-color-surface: oklch(0.205 0 0);
-  --crepe-color-surface-low: oklch(0.18 0 0);
-  --crepe-color-on-surface: oklch(0.985 0 0);
-  --crepe-color-on-surface-variant: oklch(0.708 0 0);
-  --crepe-color-outline: oklch(0.556 0 0);
-  --crepe-color-primary: oklch(0.922 0 0);
-  --crepe-color-secondary: oklch(0.269 0 0);
-  --crepe-color-on-secondary: oklch(0.985 0 0);
-  --crepe-color-inverse: oklch(0.269 0 0);
-  --crepe-color-on-inverse: oklch(0.985 0 0);
-  --crepe-color-inline-code: oklch(0.704 0.191 22.216);
-  --crepe-color-error: oklch(0.704 0.191 22.216);
-  --crepe-color-hover: oklch(0.269 0 0);
-  --crepe-color-selected: oklch(0.205 0 0);
-  --crepe-color-inline-area: oklch(0.269 0 0);
-
-  --crepe-shadow-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.3), 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
-  --crepe-shadow-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.3), 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
+[data-slate-editor] h6 {
+  font-size: calc(18px * var(--editor-scale, 1));
 }
