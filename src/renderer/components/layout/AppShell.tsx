@@ -120,7 +120,7 @@ function TitleBarInset(): React.JSX.Element {
       <SidebarTrigger className="-ml-1 text-muted-foreground/60 hover:text-foreground" />
       <Separator orientation="vertical" className="mr-1 !h-4 bg-border/40" />
       <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground/60 select-none">
-        {folderName ?? 'md-editor'}
+        {folderName ?? 'Praxis'}
       </span>
       <SettingsMenu />
     </header>

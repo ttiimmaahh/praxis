@@ -1,6 +1,6 @@
-# md-editor
+# Praxis
 
-A desktop Markdown editor with built-in course authoring and learner mode. Built with Electron, React, TypeScript, and Milkdown.
+A desktop course authoring and learning platform for technical developer training. Built with Electron, React, TypeScript, and Plate.js.
 
 ## Features
 
@@ -29,7 +29,7 @@ Templates define the starting structure for a new course. When you create a new 
 
 Templates are stored as `.yaml` files in a templates directory:
 
-- **Default location**: `~/Library/Application Support/md-editor/templates/` (macOS), or the equivalent `userData` path on Windows/Linux
+- **Default location**: `~/Library/Application Support/Praxis/templates/` (macOS), or the equivalent `userData` path on Windows/Linux
 - **Custom location**: Set via Settings (gear icon) > Templates > Change...
 
 The app seeds built-in templates into this directory on first launch.

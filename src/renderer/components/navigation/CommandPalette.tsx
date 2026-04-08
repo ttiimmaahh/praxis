@@ -88,7 +88,7 @@ export function CommandPalette(): React.JSX.Element {
                 disabled={!canEdit}
                 onSelect={() => {
                   setOpen(false)
-                  window.dispatchEvent(new CustomEvent('md-editor:save-active'))
+                  window.dispatchEvent(new CustomEvent('praxis:save-active'))
                 }}
               >
                 <Save className="text-muted-foreground" />
@@ -99,7 +99,7 @@ export function CommandPalette(): React.JSX.Element {
                 disabled={!canEdit}
                 onSelect={() => {
                   setOpen(false)
-                  window.dispatchEvent(new CustomEvent('md-editor:close-active'))
+                  window.dispatchEvent(new CustomEvent('praxis:close-active'))
                 }}
               >
                 <X className="text-muted-foreground" />
@@ -219,7 +219,7 @@ export function CommandPalette(): React.JSX.Element {
               <CommandItem
                 onSelect={() => {
                   setOpen(false)
-                  window.dispatchEvent(new CustomEvent('md-editor:toggle-sidebar'))
+                  window.dispatchEvent(new CustomEvent('praxis:toggle-sidebar'))
                 }}
               >
                 <LayoutPanelLeft className="text-muted-foreground" />

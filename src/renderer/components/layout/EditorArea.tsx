@@ -201,11 +201,11 @@ export function EditorArea(): React.JSX.Element {
     const onClose = (): void => {
       if (activeTabPath) closeFile(activeTabPath)
     }
-    window.addEventListener('md-editor:save-active', onSave)
-    window.addEventListener('md-editor:close-active', onClose)
+    window.addEventListener('praxis:save-active', onSave)
+    window.addEventListener('praxis:close-active', onClose)
     return () => {
-      window.removeEventListener('md-editor:save-active', onSave)
-      window.removeEventListener('md-editor:close-active', onClose)
+      window.removeEventListener('praxis:save-active', onSave)
+      window.removeEventListener('praxis:close-active', onClose)
     }
   }, [activeTabPath, closeFile, flushSave])
 

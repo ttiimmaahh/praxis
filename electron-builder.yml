@@ -1,5 +1,5 @@
-appId: com.md-editor.app
-productName: md-editor
+appId: dev.praxis.app
+productName: Praxis
 directories:
   buildResources: resources
   output: release

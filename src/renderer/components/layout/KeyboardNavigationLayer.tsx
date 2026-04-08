@@ -81,10 +81,10 @@ export function KeyboardNavigationLayer(): React.JSX.Element {
       toggleSidebar()
     }
     window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('md-editor:toggle-sidebar', onToggleSidebarEvent)
+    window.addEventListener('praxis:toggle-sidebar', onToggleSidebarEvent)
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('md-editor:toggle-sidebar', onToggleSidebarEvent)
+      window.removeEventListener('praxis:toggle-sidebar', onToggleSidebarEvent)
     }
   }, [
     commandPaletteOpen,
