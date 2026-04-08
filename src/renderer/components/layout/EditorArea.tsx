@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 const fileContentCache = new Map<string, string>()
 
-/** Stored frontmatter blocks keyed by file path — Milkdown can't edit these. */
+/** Stored frontmatter blocks keyed by file path — edited separately from document body. */
 const frontmatterCache = new Map<string, string>()
 
 function splitFrontmatter(content: string): { frontmatter: string; body: string } {
@@ -260,7 +260,7 @@ export function EditorArea(): React.JSX.Element {
               'relative min-h-0 flex-1',
               activeIsYaml
                 ? 'flex flex-col overflow-hidden'
-                : 'overflow-y-auto overflow-x-hidden overscroll-contain [touch-action:pan-y]'
+                : 'overflow-hidden'
             )}
           >
             {isLoading || (activeTabPath && loadedContentPath !== activeTabPath) ? (
