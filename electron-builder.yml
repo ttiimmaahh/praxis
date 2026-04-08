@@ -23,4 +23,5 @@ linux:
   target:
     - AppImage
     - deb
+  category: Education
   artifactName: ${name}-${version}-${arch}.${ext}

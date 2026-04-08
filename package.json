@@ -2,6 +2,16 @@
   "name": "praxis",
   "version": "0.1.0",
   "description": "Desktop course authoring and learning platform for technical developer training",
+  "author": {
+    "name": "Tim Pearson",
+    "email": "timpearsoncx@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/ttiimmaahh/praxis",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ttiimmaahh/praxis.git"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "node scripts/electron-vite.js dev",
