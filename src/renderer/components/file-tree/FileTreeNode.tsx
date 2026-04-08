@@ -44,6 +44,9 @@ function getFileIcon(extension: string): React.ReactNode {
       return <FileCode className={cn(iconClass, 'text-yellow-400')} />
     case '.json':
       return <FileJson className={cn(iconClass, 'text-green-400')} />
+    case '.yaml':
+    case '.yml':
+      return <FileCode className={cn(iconClass, 'text-orange-400')} />
     default:
       return <File className={iconClass} />
   }

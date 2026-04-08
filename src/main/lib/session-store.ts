@@ -12,6 +12,8 @@ interface SessionData {
   editorFontPreset?: EditorFontPreset
   editorFontSizePx?: number
   editorLineHeight?: number
+  /** When a course manifest is active: expanded state of the Project files tree in the sidebar. */
+  courseProjectFilesExpanded?: boolean
 }
 
 const DEFAULTS: SessionData = {
@@ -22,7 +24,8 @@ const DEFAULTS: SessionData = {
   themeMode: 'system',
   editorFontPreset: 'system',
   editorFontSizePx: 16,
-  editorLineHeight: 1.65
+  editorLineHeight: 1.65,
+  courseProjectFilesExpanded: false
 }
 
 let store: JsonStore<{ session: SessionData }>

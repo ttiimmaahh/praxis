@@ -16,6 +16,34 @@ interface WorkspaceSearchMatch {
   lineText: string
 }
 
+type CourseLessonRef = {
+  path: string
+  title?: string
+}
+
+type CourseModuleManifest = {
+  path: string
+  title?: string
+  lessons: CourseLessonRef[]
+}
+
+type CourseManifestParsed = {
+  title: string
+  modules: CourseModuleManifest[]
+}
+
+type LoadCourseManifestResult =
+  | { status: 'no-manifest' }
+  | { status: 'invalid'; errors: string[] }
+  | { status: 'ok'; manifest: CourseManifestParsed; warnings: string[] }
+
+type CourseAuthoringResult = { ok: true } | { ok: false; error: string }
+
+type CreateNewCourseFolderResult =
+  | null
+  | { ok: true; folderPath: string }
+  | { ok: false; error: string }
+
 type ThemeMode = 'light' | 'dark' | 'system'
 type EditorFontPreset = 'system' | 'serif' | 'mono'
 
@@ -28,6 +56,7 @@ interface SessionData {
   editorFontPreset?: EditorFontPreset
   editorFontSizePx?: number
   editorLineHeight?: number
+  courseProjectFilesExpanded?: boolean
 }
 
 interface ElectronAPI {
@@ -41,6 +70,11 @@ interface ElectronAPI {
   rename: (oldPath: string, newName: string) => Promise<string>
   delete: (entryPath: string) => Promise<void>
   searchWorkspace: (rootPath: string, query: string) => Promise<WorkspaceSearchMatch[]>
+  loadCourseManifest: (rootPath: string) => Promise<LoadCourseManifestResult>
+  createNewCourseFolder: () => Promise<CreateNewCourseFolderResult>
+  scaffoldCourseInWorkspace: (courseRoot: string) => Promise<CourseAuthoringResult>
+  addCourseModule: (courseRoot: string) => Promise<CourseAuthoringResult>
+  addCourseLesson: (courseRoot: string, modulePath: string) => Promise<CourseAuthoringResult>
   getSession: () => Promise<SessionData>
   saveSession: (data: Partial<SessionData>) => Promise<void>
   setTitleBarOverlay: (options: { isDark: boolean }) => Promise<void>

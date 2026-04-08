@@ -12,6 +12,12 @@ import {
 import { searchWorkspaceMarkdown } from './lib/workspace-search'
 import { startWatching } from './lib/file-watcher'
 import { getSession, saveSession } from './lib/session-store'
+import { loadCourseManifest } from './lib/load-course-manifest'
+import {
+  scaffoldCourse,
+  addModuleToCourse,
+  addLessonToModule
+} from './lib/course-authoring'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle('dialog:openFolder', async () => {
@@ -56,6 +62,53 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('fs:searchWorkspace', async (_event, rootPath: string, query: string) => {
     return searchWorkspaceMarkdown(rootPath, query)
+  })
+
+  ipcMain.handle('course:loadManifest', async (_event, rootPath: string) => {
+    return loadCourseManifest(rootPath)
+  })
+
+  ipcMain.handle('course:createNewCourseFolder', async () => {
+    const window = BrowserWindow.getFocusedWindow()
+    if (!window) return null
+    const result = await dialog.showOpenDialog(window, {
+      properties: ['openDirectory', 'createDirectory'],
+      title: 'Select or create a folder for the new course'
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    const folderPath = result.filePaths[0]
+    const scaffoldResult = await scaffoldCourse(folderPath)
+    if (!scaffoldResult.ok) {
+      return { ok: false as const, error: scaffoldResult.error }
+    }
+    await startWatching(folderPath)
+    return { ok: true as const, folderPath }
+  })
+
+  ipcMain.handle('course:scaffold', async (_event, courseRoot: string) => {
+    if (typeof courseRoot !== 'string' || courseRoot.trim() === '') {
+      return { ok: false as const, error: 'Invalid path.' }
+    }
+    const scaffoldResult = await scaffoldCourse(courseRoot)
+    if (!scaffoldResult.ok) {
+      return scaffoldResult
+    }
+    await startWatching(courseRoot)
+    return { ok: true as const }
+  })
+
+  ipcMain.handle('course:addModule', async (_event, courseRoot: string) => {
+    if (typeof courseRoot !== 'string' || courseRoot.trim() === '') {
+      return { ok: false as const, error: 'Invalid path.' }
+    }
+    return addModuleToCourse(courseRoot)
+  })
+
+  ipcMain.handle('course:addLesson', async (_event, courseRoot: string, modulePath: string) => {
+    if (typeof courseRoot !== 'string' || typeof modulePath !== 'string') {
+      return { ok: false as const, error: 'Invalid path.' }
+    }
+    return addLessonToModule(courseRoot, modulePath)
   })
 
   ipcMain.handle('session:get', () => {

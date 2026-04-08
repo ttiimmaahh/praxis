@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useWorkspaceStore } from '@/stores/workspace-store'
+import { useCourseStore } from '@/stores/course-store'
+import { shouldReloadCourseManifestAfterSave } from '@/lib/course-manifest-reload'
 import { TabBar } from '@/components/editor/TabBar'
 import { MarkdownEditor, type MarkdownEditorHandle } from '@/components/editor/MarkdownEditor'
+import { YamlEditor } from '@/components/editor/YamlEditor'
 import { DocumentOutline } from '@/components/editor/DocumentOutline'
 import { countWords, readingTimeMinutes } from '@/lib/word-stats'
+import { isYamlFilePath } from '@/lib/editor-path'
+import { isCourseYamlAtWorkspaceRoot } from '@/lib/path-utils'
 import { cn } from '@/lib/utils'
 
 const fileContentCache = new Map<string, string>()
@@ -14,16 +19,20 @@ export function EditorArea(): React.JSX.Element {
   const outlineOpen = useWorkspaceStore((s) => s.outlineOpen)
   const markDirty = useWorkspaceStore((s) => s.markDirty)
   const closeFile = useWorkspaceStore((s) => s.closeFile)
+  const rootPath = useWorkspaceStore((s) => s.rootPath)
+  const loadCourseForRoot = useCourseStore((s) => s.loadForRoot)
 
   const [loadedContent, setLoadedContent] = useState<string | null>(null)
+  const [loadedContentPath, setLoadedContentPath] = useState<string | null>(null)
   const [liveMarkdown, setLiveMarkdown] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const editorRef = useRef<MarkdownEditorHandle | null>(null)
 
   useEffect(() => {
     if (!activeTabPath) {
       setLoadedContent(null)
+      setLoadedContentPath(null)
       setLiveMarkdown('')
       return
     }
@@ -31,24 +40,36 @@ export function EditorArea(): React.JSX.Element {
     const cached = fileContentCache.get(activeTabPath)
     if (cached !== undefined) {
       setLoadedContent(cached)
+      setLoadedContentPath(activeTabPath)
       setLiveMarkdown(cached)
       return
     }
 
+    let cancelled = false
     setIsLoading(true)
     window.electronAPI
       .readFile(activeTabPath)
       .then((content) => {
+        if (cancelled) return
         fileContentCache.set(activeTabPath, content)
         setLoadedContent(content)
+        setLoadedContentPath(activeTabPath)
         setLiveMarkdown(content)
       })
       .catch((error) => {
+        if (cancelled) return
         console.error('Failed to load file:', error)
         setLoadedContent('')
+        setLoadedContentPath(activeTabPath)
         setLiveMarkdown('')
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [activeTabPath])
 
   const handleContentChange = useCallback(
@@ -58,28 +79,53 @@ export function EditorArea(): React.JSX.Element {
         setLiveMarkdown(newContent)
       }
 
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = setTimeout(async () => {
+      const existingTimer = saveTimersRef.current.get(filePath)
+      if (existingTimer) clearTimeout(existingTimer)
+      const debounceMs =
+        rootPath !== null && isCourseYamlAtWorkspaceRoot(filePath, rootPath) ? 300 : 1000
+      const timerId = setTimeout(async () => {
+        saveTimersRef.current.delete(filePath)
         try {
           await window.electronAPI.writeFile(filePath, newContent)
           markDirty(filePath, false)
+          const courseStatus = useCourseStore.getState().status
+          if (shouldReloadCourseManifestAfterSave(filePath, rootPath, courseStatus)) {
+            void loadCourseForRoot(rootPath)
+          }
         } catch (error) {
           console.error('Auto-save failed:', error)
         }
-      }, 1000)
+      }, debounceMs)
+      saveTimersRef.current.set(filePath, timerId)
     },
-    [activeTabPath, markDirty]
+    [activeTabPath, markDirty, rootPath, loadCourseForRoot]
   )
 
   const flushSave = useCallback((): void => {
     if (!activeTabPath) return
     const content = fileContentCache.get(activeTabPath)
     if (content === undefined) return
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    const existingTimer = saveTimersRef.current.get(activeTabPath)
+    if (existingTimer) {
+      clearTimeout(existingTimer)
+      saveTimersRef.current.delete(activeTabPath)
+    }
     window.electronAPI.writeFile(activeTabPath, content).then(() => {
       markDirty(activeTabPath, false)
+      const courseStatus = useCourseStore.getState().status
+      if (shouldReloadCourseManifestAfterSave(activeTabPath, rootPath, courseStatus)) {
+        void loadCourseForRoot(rootPath)
+      }
     })
-  }, [activeTabPath, markDirty])
+  }, [activeTabPath, markDirty, rootPath, loadCourseForRoot])
+
+  useEffect(() => {
+    const timers = saveTimersRef.current
+    return () => {
+      for (const timerId of timers.values()) clearTimeout(timerId)
+      timers.clear()
+    }
+  }, [])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -117,10 +163,14 @@ export function EditorArea(): React.JSX.Element {
 
   const wordCount = countWords(liveMarkdown)
   const readMinutes = readingTimeMinutes(wordCount)
+  const activeIsYaml = activeTabPath !== null && isYamlFilePath(activeTabPath)
+  const yamlLineCount = activeIsYaml ? liveMarkdown.split(/\r?\n/).length : 0
+  const yamlCharCount = activeIsYaml ? liveMarkdown.length : 0
 
   const handleJumpToHeading = useCallback((headingIndex: number) => {
+    if (activeTabPath && isYamlFilePath(activeTabPath)) return
     editorRef.current?.scrollToHeadingIndex(headingIndex)
-  }, [])
+  }, [activeTabPath])
 
   if (openTabs.length === 0) {
     return (
@@ -139,33 +189,57 @@ export function EditorArea(): React.JSX.Element {
       <div
         className={cn(
           'flex min-h-0 flex-1 overflow-hidden',
-          outlineOpen && 'flex-row'
+          outlineOpen && !activeIsYaml && 'flex-row'
         )}
       >
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <div className="flex h-8 shrink-0 items-center justify-end border-b border-border/50 bg-muted/20 px-3 text-[11px] tabular-nums text-muted-foreground">
             <span>
-              {wordCount.toLocaleString()} words
-              {wordCount > 0 ? ` · ~${readMinutes} min read` : ''}
+              {activeIsYaml ? (
+                <>
+                  {yamlLineCount.toLocaleString()} lines · {yamlCharCount.toLocaleString()} characters · YAML
+                </>
+              ) : (
+                <>
+                  {wordCount.toLocaleString()} words
+                  {wordCount > 0 ? ` · ~${readMinutes} min read` : ''}
+                </>
+              )}
             </span>
           </div>
-          <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain [touch-action:pan-y]">
-            {isLoading ? (
+          <div
+            className={cn(
+              'relative min-h-0 flex-1',
+              activeIsYaml
+                ? 'flex flex-col overflow-hidden'
+                : 'overflow-y-auto overflow-x-hidden overscroll-contain [touch-action:pan-y]'
+            )}
+          >
+            {isLoading || (activeTabPath && loadedContentPath !== activeTabPath) ? (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                 Loading...
               </div>
             ) : activeTabPath && loadedContent !== null ? (
-              <MarkdownEditor
-                ref={editorRef}
-                key={activeTabPath}
-                filePath={activeTabPath}
-                content={loadedContent}
-                onContentChange={handleContentChange}
-              />
+              activeIsYaml ? (
+                <YamlEditor
+                  key={activeTabPath}
+                  filePath={activeTabPath}
+                  content={liveMarkdown}
+                  onContentChange={handleContentChange}
+                />
+              ) : (
+                <MarkdownEditor
+                  ref={editorRef}
+                  key={activeTabPath}
+                  filePath={activeTabPath}
+                  content={loadedContent}
+                  onContentChange={handleContentChange}
+                />
+              )
             ) : null}
           </div>
         </div>
-        {outlineOpen ? (
+        {outlineOpen && !activeIsYaml ? (
           <DocumentOutline markdown={liveMarkdown} onJumpToHeading={handleJumpToHeading} />
         ) : null}
       </div>

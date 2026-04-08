@@ -29,6 +29,17 @@ const electronAPI = {
   searchWorkspace: (rootPath: string, query: string): Promise<WorkspaceSearchMatch[]> =>
     ipcRenderer.invoke('fs:searchWorkspace', rootPath, query),
 
+  loadCourseManifest: (rootPath: string) => ipcRenderer.invoke('course:loadManifest', rootPath),
+
+  createNewCourseFolder: () => ipcRenderer.invoke('course:createNewCourseFolder'),
+
+  scaffoldCourseInWorkspace: (courseRoot: string) => ipcRenderer.invoke('course:scaffold', courseRoot),
+
+  addCourseModule: (courseRoot: string) => ipcRenderer.invoke('course:addModule', courseRoot),
+
+  addCourseLesson: (courseRoot: string, modulePath: string) =>
+    ipcRenderer.invoke('course:addLesson', courseRoot, modulePath),
+
   getSession: (): Promise<SessionData> => ipcRenderer.invoke('session:get'),
 
   saveSession: (data: Partial<SessionData>): Promise<void> =>
