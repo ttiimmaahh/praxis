@@ -149,15 +149,9 @@ export function CommandPalette(): React.JSX.Element {
             <CommandSeparator />
             <CommandGroup heading="Course">
               <CommandItem
-                onSelect={async () => {
+                onSelect={() => {
                   setOpen(false)
-                  const result = await window.electronAPI.createNewCourseFolder()
-                  if (result === null) return
-                  if (result.ok) {
-                    useWorkspaceStore.getState().setRootPath(result.folderPath)
-                  } else {
-                    window.alert(result.error)
-                  }
+                  useWorkspaceStore.getState().openTemplatePicker('new')
                 }}
               >
                 <BookPlus className="text-muted-foreground" />
@@ -165,15 +159,10 @@ export function CommandPalette(): React.JSX.Element {
               </CommandItem>
               <CommandItem
                 disabled={!rootPath || courseStatus !== 'no-manifest'}
-                onSelect={async () => {
+                onSelect={() => {
                   if (!rootPath) return
                   setOpen(false)
-                  const result = await window.electronAPI.scaffoldCourseInWorkspace(rootPath)
-                  if (!result.ok) {
-                    window.alert(result.error)
-                    return
-                  }
-                  void useCourseStore.getState().loadForRoot(rootPath)
+                  useWorkspaceStore.getState().openTemplatePicker('scaffold')
                 }}
               >
                 <FolderPlus className="text-muted-foreground" />

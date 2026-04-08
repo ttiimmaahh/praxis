@@ -18,6 +18,7 @@ import { EditorArea } from './EditorArea'
 import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
 import { CommandPalette } from '@/components/navigation/CommandPalette'
 import { WorkspaceSearchDialog } from '@/components/navigation/WorkspaceSearchDialog'
+import { TemplatePickerDialog } from '@/components/course/TemplatePickerDialog'
 import { LearnerView } from '@/components/learner/LearnerView'
 import { LearnerOutline } from '@/components/learner/LearnerOutline'
 import { basenameFromPath } from '@/lib/path-utils'
@@ -44,14 +45,9 @@ function SidebarExplorer(): React.JSX.Element {
     }
   }
 
-  async function handleScaffoldInCurrentFolder(): Promise<void> {
+  function handleScaffoldInCurrentFolder(): void {
     if (!rootPath) return
-    const result = await window.electronAPI.scaffoldCourseInWorkspace(rootPath)
-    if (!result.ok) {
-      window.alert(result.error)
-      return
-    }
-    void useCourseStore.getState().loadForRoot(rootPath)
+    useWorkspaceStore.getState().openTemplatePicker('scaffold')
   }
 
   return (
@@ -76,7 +72,7 @@ function SidebarExplorer(): React.JSX.Element {
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => void handleScaffoldInCurrentFolder()}
+                    onClick={handleScaffoldInCurrentFolder}
                   >
                     Start course in this folder
                   </Button>
@@ -161,9 +157,36 @@ function SidebarResizeHandle(): React.JSX.Element {
   )
 }
 
+async function handleTemplateSelected(templateId: string, courseName: string): Promise<void> {
+  const { templatePickerMode, rootPath } = useWorkspaceStore.getState()
+
+  // Course creator should land in edit mode, not learner mode
+  useWorkspaceStore.getState().setSuppressLearnerAutoEnter(true)
+
+  if (templatePickerMode === 'scaffold' && rootPath) {
+    const result = await window.electronAPI.scaffoldCourseInWorkspace(rootPath, templateId)
+    if (!result.ok) {
+      window.alert(result.error)
+      return
+    }
+    void useCourseStore.getState().loadForRoot(rootPath)
+  } else {
+    const result = await window.electronAPI.createNewCourseFolder(templateId, courseName)
+    if (result === null) return
+    if (result.ok) {
+      useWorkspaceStore.getState().setRootPath(result.folderPath)
+    } else {
+      window.alert(result.error)
+    }
+  }
+}
+
 export function AppShell(): React.JSX.Element {
   const sidebarWidth = useWorkspaceStore((s) => s.sidebarWidth)
   const learnerActive = useLearnerStore((s) => s.active)
+  const templatePickerOpen = useWorkspaceStore((s) => s.templatePickerOpen)
+  const templatePickerMode = useWorkspaceStore((s) => s.templatePickerMode)
+  const setTemplatePickerOpen = useWorkspaceStore((s) => s.setTemplatePickerOpen)
 
   return (
     <SidebarProvider
@@ -173,6 +196,12 @@ export function AppShell(): React.JSX.Element {
       <KeyboardNavigationLayer />
       <CommandPalette />
       <WorkspaceSearchDialog />
+      <TemplatePickerDialog
+        open={templatePickerOpen}
+        showNameInput={templatePickerMode === 'new'}
+        onOpenChange={setTemplatePickerOpen}
+        onSelect={(id, name) => void handleTemplateSelected(id, name)}
+      />
       <Sidebar variant="inset" className="border-r-0">
         <SidebarExplorer />
         <SidebarResizeHandle />

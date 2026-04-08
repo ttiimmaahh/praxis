@@ -27,9 +27,20 @@ type CourseModuleManifest = {
   lessons: CourseLessonRef[]
 }
 
+type SchemaField = {
+  name: string
+  required: boolean
+  type: 'string' | 'number'
+}
+
+type CourseSchema = {
+  lessonFields: SchemaField[]
+}
+
 type CourseManifestParsed = {
   title: string
   modules: CourseModuleManifest[]
+  schema?: CourseSchema
 }
 
 type LoadCourseManifestResult =
@@ -62,6 +73,14 @@ interface SessionData {
   editorLineHeight?: number
   courseProjectFilesExpanded?: boolean
   reopenLastFolder?: boolean
+  templatesDir?: string
+}
+
+interface CourseTemplateMeta {
+  id: string
+  name: string
+  description: string
+  builtIn: boolean
 }
 
 interface ElectronAPI {
@@ -76,8 +95,12 @@ interface ElectronAPI {
   delete: (entryPath: string) => Promise<void>
   searchWorkspace: (rootPath: string, query: string) => Promise<WorkspaceSearchMatch[]>
   loadCourseManifest: (rootPath: string) => Promise<LoadCourseManifestResult>
-  createNewCourseFolder: () => Promise<CreateNewCourseFolderResult>
-  scaffoldCourseInWorkspace: (courseRoot: string) => Promise<CourseAuthoringResult>
+  createNewCourseFolder: (templateId?: string, courseName?: string) => Promise<CreateNewCourseFolderResult>
+  scaffoldCourseInWorkspace: (courseRoot: string, templateId?: string) => Promise<CourseAuthoringResult>
+  listTemplates: () => Promise<CourseTemplateMeta[]>
+  getTemplatesDir: () => Promise<string>
+  openTemplatesDir: () => Promise<void>
+  setTemplatesDir: (dir: string | null) => Promise<void>
   addCourseModule: (courseRoot: string) => Promise<CourseAuthoringResult>
   addCourseLesson: (courseRoot: string, modulePath: string) => Promise<CourseAuthoringResult>
   getCourseProgress: (courseRoot: string) => Promise<CourseProgress>

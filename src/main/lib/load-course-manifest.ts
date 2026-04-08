@@ -5,7 +5,10 @@ import {
   validateCourseManifestStructure,
   type LoadCourseManifestResult
 } from '../../shared/course-manifest'
-import { extractLessonDisplayTitle } from '../../shared/lesson-title-from-markdown'
+import {
+  extractLessonDisplayTitle,
+  parseFrontmatter
+} from '../../shared/lesson-title-from-markdown'
 
 export type { LoadCourseManifestResult }
 
@@ -66,12 +69,23 @@ export async function loadCourseManifest(courseRoot: string): Promise<LoadCourse
           warnings.push(`Lesson "${display}" exists but is not a file.`)
           continue
         }
+        const content = await readFile(lessonPath, 'utf-8')
         const yamlTitle = lesson.title?.trim()
         if (!yamlTitle) {
-          const content = await readFile(lessonPath, 'utf-8')
           const fromDoc = extractLessonDisplayTitle(content)
           if (fromDoc) {
             lesson.title = fromDoc
+          }
+        }
+        // Validate frontmatter against schema
+        if (manifest.schema?.lessonFields) {
+          const fm = parseFrontmatter(content)
+          for (const field of manifest.schema.lessonFields) {
+            if (!field.required) continue
+            const value = fm?.[field.name]
+            if (value === undefined || value === null || value === '') {
+              warnings.push(`Lesson "${display}": missing required field "${field.name}"`)
+            }
           }
         }
       } catch {
