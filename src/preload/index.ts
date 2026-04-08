@@ -45,6 +45,23 @@ const electronAPI = {
   saveSession: (data: Partial<SessionData>): Promise<void> =>
     ipcRenderer.invoke('session:save', data),
 
+  getCourseProgress: (courseRoot: string): Promise<CourseProgress> =>
+    ipcRenderer.invoke('progress:get', courseRoot),
+
+  markLessonComplete: (
+    courseRoot: string,
+    modulePath: string,
+    lessonPath: string
+  ): Promise<CourseProgress> =>
+    ipcRenderer.invoke('progress:markComplete', courseRoot, modulePath, lessonPath),
+
+  unmarkLessonComplete: (
+    courseRoot: string,
+    modulePath: string,
+    lessonPath: string
+  ): Promise<CourseProgress> =>
+    ipcRenderer.invoke('progress:unmarkComplete', courseRoot, modulePath, lessonPath),
+
   setTitleBarOverlay: (options: { isDark: boolean }): Promise<void> =>
     ipcRenderer.invoke('window:setTitleBarOverlay', options),
 

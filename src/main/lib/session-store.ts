@@ -14,6 +14,8 @@ interface SessionData {
   editorLineHeight?: number
   /** When a course manifest is active: expanded state of the Project files tree in the sidebar. */
   courseProjectFilesExpanded?: boolean
+  /** Whether to reopen the last folder on app launch. Defaults to false. */
+  reopenLastFolder?: boolean
 }
 
 const DEFAULTS: SessionData = {
@@ -25,7 +27,8 @@ const DEFAULTS: SessionData = {
   editorFontPreset: 'system',
   editorFontSizePx: 16,
   editorLineHeight: 1.65,
-  courseProjectFilesExpanded: false
+  courseProjectFilesExpanded: false,
+  reopenLastFolder: false
 }
 
 let store: JsonStore<{ session: SessionData }>

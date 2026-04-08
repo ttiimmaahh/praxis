@@ -18,17 +18,20 @@ import {
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import {
   BookPlus,
+  Eye,
   FileSearch,
   FolderOpen,
   FolderPlus,
   FolderTree,
   LayoutPanelLeft,
   ListTree,
-  Palette,
+  Pencil,
   Save,
+  Settings,
   X
 } from 'lucide-react'
 import { useCourseStore } from '@/stores/course-store'
+import { useLearnerStore } from '@/stores/learner-store'
 import {
   persistCourseProjectFilesExpanded,
   useCourseSidebarStore
@@ -46,7 +49,9 @@ export function CommandPalette(): React.JSX.Element {
   const toggleOutline = useWorkspaceStore((s) => s.toggleOutline)
   const outlineOpen = useWorkspaceStore((s) => s.outlineOpen)
   const courseStatus = useCourseStore((s) => s.status)
+  const manifest = useCourseStore((s) => s.manifest)
   const courseReady = courseStatus === 'ready'
+  const learnerActive = useLearnerStore((s) => s.active)
 
   const canEdit = activeTabPath !== null
 
@@ -190,6 +195,24 @@ export function CommandPalette(): React.JSX.Element {
                 <FolderPlus className="text-muted-foreground" />
                 <span>Add module</span>
               </CommandItem>
+              <CommandItem
+                disabled={!rootPath || !courseReady}
+                onSelect={() => {
+                  setOpen(false)
+                  if (learnerActive) {
+                    useLearnerStore.getState().exit()
+                  } else if (manifest && rootPath) {
+                    void useLearnerStore.getState().enter(manifest, rootPath)
+                  }
+                }}
+              >
+                {learnerActive ? (
+                  <Pencil className="text-muted-foreground" />
+                ) : (
+                  <Eye className="text-muted-foreground" />
+                )}
+                <span>{learnerActive ? 'Switch to edit mode' : 'Switch to learner mode'}</span>
+              </CommandItem>
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="View">
@@ -197,12 +220,12 @@ export function CommandPalette(): React.JSX.Element {
                 onSelect={() => {
                   setOpen(false)
                   requestAnimationFrame(() => {
-                    document.querySelector<HTMLButtonElement>('[data-appearance-trigger]')?.click()
+                    document.querySelector<HTMLButtonElement>('[data-settings-trigger]')?.click()
                   })
                 }}
               >
-                <Palette className="text-muted-foreground" />
-                <span>Appearance & typography…</span>
+                <Settings className="text-muted-foreground" />
+                <span>Settings…</span>
               </CommandItem>
               <CommandItem
                 onSelect={() => {

@@ -244,9 +244,9 @@
 
 .milkdown .editor,
 .milkdown .ProseMirror {
-  padding: 2rem 3rem !important;
-  max-width: 48rem;
-  margin: 0 auto;
+  padding: 2rem 2.5rem !important;
+  max-width: none;
+  margin: 0;
 }
 
 /*
