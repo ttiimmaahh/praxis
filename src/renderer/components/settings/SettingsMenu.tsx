@@ -229,9 +229,15 @@ export function SettingsMenu(): React.JSX.Element {
             variant="ghost"
             size="sm"
             className="h-7 gap-1.5 text-xs text-muted-foreground"
-            disabled={checking || updateStatus === 'downloading' || updateStatus === 'ready'}
+            disabled={
+              checking ||
+              updateStatus === 'available' ||
+              updateStatus === 'downloading' ||
+              updateStatus === 'ready'
+            }
             onClick={() => {
               setChecking(true)
+              useUpdateStore.getState().setManualCheckPending(true)
               window.electronAPI.checkForUpdates().finally(() => setChecking(false))
             }}
           >
@@ -240,9 +246,11 @@ export function SettingsMenu(): React.JSX.Element {
               ? 'Update ready'
               : updateStatus === 'downloading'
                 ? 'Downloading…'
-                : checking
-                  ? 'Checking…'
-                  : 'Check for updates'}
+                : updateStatus === 'available'
+                  ? 'Update available'
+                  : checking
+                    ? 'Checking…'
+                    : 'Check for updates'}
           </Button>
         </div>
       </PopoverContent>

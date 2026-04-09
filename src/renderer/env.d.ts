@@ -77,8 +77,10 @@ interface ElectronAPI {
   setTitleBarOverlay: (options: { isDark: boolean }) => Promise<void>
   onFileSystemChange: (callback: (event: FileSystemChangeEvent) => void) => () => void
   checkForUpdates: () => Promise<void>
+  downloadUpdate: () => Promise<void>
   quitAndInstall: () => Promise<void>
   onUpdateAvailable: (callback: (info: UpdateEventInfo) => void) => () => void
+  onUpdateNotAvailable: (callback: (info: UpdateEventInfo) => void) => () => void
   onUpdateDownloaded: (callback: (info: UpdateEventInfo) => void) => () => void
   onUpdateError: (callback: (info: UpdateErrorInfo) => void) => () => void
 }

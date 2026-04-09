@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.2.2 — Update UX Polish
+
+### New
+
+- **Manual "latest version" confirmation** — clicking "Check for updates" in the Settings menu now shows a toast confirming you're on the latest version when no update is available. Background checks remain silent.
+- **Explicit download step** — when an update is available, Praxis no longer starts downloading automatically. The update toast now shows a "Download" button so you control when the bits come down.
+- **Error visibility** — update failures now surface in the toast and (for manual checks) a transient error notification, instead of silently disappearing.
+
+### Improved
+
+- **Toast notifications** — added [Sonner](https://sonner.emilkowal.ski/) for transient success/error messages, themed to match the app's dark/light mode.
+- **Sticky "ready" state** — once an update is downloaded, a subsequent background check failure no longer clobbers the "Restart to install" toast.
+- **Updater diagnostics** — the main process now logs all updater events (`checking`, `available`, `not-available`, `download-progress`, `downloaded`, `error`) to make bug reports easier to triage.
+- **README: platform signing status** — documented the current code-signing state for macOS (ad-hoc today, Developer ID planned), Windows (unsigned by design), and Linux, plus what that means for auto-update on each platform.
+
+### Under the Hood
+
+- Removed unused `next-themes` and `lowlight` dependencies
+- New `updater:downloadUpdate` IPC handler and preload bridge method; new `updater:not-available` event
+- `UpdateNotification` rewritten as a 4-state component (available / downloading / ready / error)
+
+> **Heads up — macOS auto-update is still broken.** macOS Squirrel requires stable code-signing identity to verify updates, and the current ad-hoc signed builds get a fresh identity per build. This release is partly a validation: confirming that even universal-to-universal updates fail without proper Developer ID signing. A follow-up release will add Developer ID Application signing and fix the macOS auto-update pipeline end-to-end.
+
+---
+
 ## v0.2.1 — Icon & Universal Mac
 
 ### New

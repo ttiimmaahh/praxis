@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { getTitleBarOverlayForIsDark } from './lib/title-bar-overlay'
-import { checkForUpdates, quitAndInstall } from './lib/auto-updater'
+import { checkForUpdates, downloadUpdate, quitAndInstall } from './lib/auto-updater'
 import {
   readDirectory,
   readFileContent,
@@ -198,6 +198,10 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('updater:checkForUpdates', async () => {
     await checkForUpdates()
+  })
+
+  ipcMain.handle('updater:downloadUpdate', async () => {
+    await downloadUpdate()
   })
 
   ipcMain.handle('updater:quitAndInstall', () => {
