@@ -131,8 +131,11 @@ export function validateCourseManifestStructure(
       path: mod.path,
       title: mod.title && mod.title.length > 0 ? mod.title : undefined,
       lessons: mod.lessons.map((lesson) => {
-        if (lesson.title) return { path: lesson.path, title: lesson.title }
-        return { path: lesson.path }
+        // Zod union: `string → { path }` OR `{ path, title? }`. The string
+        // branch has no `title` key at all, so narrow with `'title' in lesson`
+        // before touching it.
+        const title = 'title' in lesson ? lesson.title : undefined
+        return title ? { path: lesson.path, title } : { path: lesson.path }
       })
     })),
     ...(parsed.schema ? { schema: parsed.schema } : {})
