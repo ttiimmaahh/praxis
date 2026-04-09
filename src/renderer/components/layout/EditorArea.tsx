@@ -1,15 +1,20 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useCourseStore } from '@/stores/course-store'
 import { shouldReloadCourseManifestAfterSave } from '@/lib/course-manifest-reload'
 import { TabBar } from '@/components/editor/TabBar'
 import { MarkdownEditor, type MarkdownEditorHandle } from '@/components/editor/MarkdownEditor'
+
+const RawMarkdownEditor = lazy(() =>
+  import('@/components/editor/RawMarkdownEditor').then((m) => ({ default: m.RawMarkdownEditor }))
+)
 import { YamlEditor } from '@/components/editor/YamlEditor'
 import { DocumentOutline } from '@/components/editor/DocumentOutline'
 import { countWords, readingTimeMinutes } from '@/lib/word-stats'
 import { isYamlFilePath } from '@/lib/editor-path'
 import { isCourseYamlAtWorkspaceRoot } from '@/lib/path-utils'
 import { cn } from '@/lib/utils'
+import { Code, Eye } from 'lucide-react'
 
 const fileContentCache = new Map<string, string>()
 
@@ -48,8 +53,26 @@ export function EditorArea(): React.JSX.Element {
   const [loadedContentPath, setLoadedContentPath] = useState<string | null>(null)
   const [liveMarkdown, setLiveMarkdown] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const [codeModeFiles, setCodeModeFiles] = useState<Set<string>>(new Set())
   const saveTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   const editorRef = useRef<MarkdownEditorHandle | null>(null)
+
+  const activeIsCodeMode = activeTabPath !== null && codeModeFiles.has(activeTabPath)
+
+  const toggleCodeMode = useCallback(() => {
+    if (!activeTabPath) return
+    setCodeModeFiles((prev) => {
+      const next = new Set(prev)
+      if (next.has(activeTabPath)) {
+        next.delete(activeTabPath)
+        // Refresh loadedContent so MarkdownEditor re-deserializes current content
+        setLoadedContent(liveMarkdown)
+      } else {
+        next.add(activeTabPath)
+      }
+      return next
+    })
+  }, [activeTabPath, liveMarkdown])
 
   useEffect(() => {
     if (!activeTabPath) {
@@ -180,8 +203,10 @@ export function EditorArea(): React.JSX.Element {
     let prevPaths = new Set(useWorkspaceStore.getState().openTabs.map((t) => t.filePath))
     const unsub = useWorkspaceStore.subscribe((state) => {
       const currentPaths = new Set(state.openTabs.map((t) => t.filePath))
+      const closed: string[] = []
       for (const p of prevPaths) {
         if (!currentPaths.has(p)) {
+          closed.push(p)
           fileContentCache.delete(p)
           frontmatterCache.delete(p)
           const timer = saveTimersRef.current.get(p)
@@ -190,6 +215,13 @@ export function EditorArea(): React.JSX.Element {
             saveTimersRef.current.delete(p)
           }
         }
+      }
+      if (closed.length > 0) {
+        setCodeModeFiles((prev) => {
+          const next = new Set(prev)
+          for (const p of closed) next.delete(p)
+          return next.size !== prev.size ? next : prev
+        })
       }
       prevPaths = currentPaths
     })
@@ -238,8 +270,9 @@ export function EditorArea(): React.JSX.Element {
 
   const handleJumpToHeading = useCallback((headingIndex: number) => {
     if (activeTabPath && isYamlFilePath(activeTabPath)) return
+    if (activeIsCodeMode) return
     editorRef.current?.scrollToHeadingIndex(headingIndex)
-  }, [activeTabPath])
+  }, [activeTabPath, activeIsCodeMode])
 
   if (openTabs.length === 0) {
     return (
@@ -262,7 +295,7 @@ export function EditorArea(): React.JSX.Element {
         )}
       >
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex h-8 shrink-0 items-center justify-end border-b border-border/50 bg-muted/20 px-3 text-[11px] tabular-nums text-muted-foreground">
+          <div className="flex h-8 shrink-0 items-center justify-between border-b border-border/50 bg-muted/20 px-3 text-[11px] tabular-nums text-muted-foreground">
             <span>
               {activeIsYaml ? (
                 <>
@@ -275,6 +308,25 @@ export function EditorArea(): React.JSX.Element {
                 </>
               )}
             </span>
+            {!activeIsYaml && activeTabPath && (
+              <button
+                onClick={toggleCodeMode}
+                title={activeIsCodeMode ? 'Switch to rich editor' : 'Switch to source'}
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {activeIsCodeMode ? (
+                  <>
+                    <Eye className="size-3.5" />
+                    <span>Preview</span>
+                  </>
+                ) : (
+                  <>
+                    <Code className="size-3.5" />
+                    <span>Source</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <div
             className={cn(
@@ -296,10 +348,23 @@ export function EditorArea(): React.JSX.Element {
                   content={liveMarkdown}
                   onContentChange={handleContentChange}
                 />
+              ) : activeIsCodeMode ? (
+                <Suspense fallback={
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    Loading...
+                  </div>
+                }>
+                  <RawMarkdownEditor
+                    key={`${activeTabPath}-raw`}
+                    filePath={activeTabPath}
+                    content={liveMarkdown}
+                    onContentChange={handleContentChange}
+                  />
+                </Suspense>
               ) : (
                 <MarkdownEditor
                   ref={editorRef}
-                  key={activeTabPath}
+                  key={`${activeTabPath}-rich`}
                   filePath={activeTabPath}
                   content={loadedContent}
                   onContentChange={handleContentChange}
