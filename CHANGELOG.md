@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.1.1 — Source View & Quality of Life
+
+### New
+
+- **Markdown source view** — toggle between the rich editor and raw markdown source with the new Source/Preview button in the editor toolbar. Great for power users who want to see or edit the underlying markdown directly.
+
+### Improved
+
+- **Editor theming** — YAML and markdown source editors now properly match the app's dark and light themes with a new reader-friendly syntax highlighting palette
+- **Faster startup** — dialogs and the learner view are now loaded on demand instead of all at once
+- **Smarter session saving** — the app no longer writes to disk every 5 seconds when nothing has changed
+
+### Under the Hood
+
+- Added test suite with 40 automated tests
+- Added ESLint and Prettier for code quality
+- Added CI pipeline that runs lint, tests, and build on every PR
+- Replaced manual YAML validation with Zod schemas
+- Fixed a memory leak when opening many files in a session
+- Removed lodash dependency (replaced with a lightweight utility)
+
+---
+
 ## v0.1.0 — Initial Release
 
 The first public release of Praxis, a desktop course authoring and learning platform for technical developer training.
