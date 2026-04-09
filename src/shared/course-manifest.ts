@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 /**
  * `course.yaml` at the workspace root. Paths use POSIX-style segments; each module
  * is a folder under the course root; each lesson path is relative to that folder.
@@ -59,152 +61,82 @@ export type LoadCourseManifestResult =
   | { status: 'invalid'; errors: string[] }
   | { status: 'ok'; manifest: CourseManifestParsed; warnings: string[] }
 
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0
-}
+// ---------------------------------------------------------------------------
+// Zod schemas
+// ---------------------------------------------------------------------------
 
 /** Reject `..` and empty segments in a path string. */
-function isSafeRelativePath(value: string): boolean {
-  const segments = value.split(/[/\\]/).filter((s) => s.length > 0)
-  return segments.length > 0 && segments.every((s) => s !== '..')
-}
+const safeRelativePath = z.string().trim().min(1).refine(
+  (value) => {
+    const segments = value.split(/[/\\]/).filter((s) => s.length > 0)
+    return segments.length > 0 && segments.every((s) => s !== '..')
+  },
+  { message: 'Must be a safe relative path (no "..").' }
+)
+
+const CourseLessonRefObjectSchema = z.object({
+  path: safeRelativePath,
+  title: z.string().trim().min(1).optional()
+})
+
+const CourseLessonRefSchema = z.union([
+  safeRelativePath.transform((path) => ({ path })),
+  CourseLessonRefObjectSchema
+])
+
+const SchemaFieldSchema = z.object({
+  name: z.string().trim().min(1),
+  required: z.boolean().optional().default(false),
+  type: z.enum(['string', 'number']).optional().default('string')
+})
+
+const CourseSchemaSchema = z.object({
+  lessonFields: z.array(SchemaFieldSchema).min(1)
+})
+
+const CourseManifestSchema = z.object({
+  title: z.string().trim().min(1, 'Field `title` must be a non-empty string.'),
+  modules: z
+    .array(
+      z.object({
+        path: safeRelativePath,
+        title: z.string().trim().optional(),
+        lessons: z.array(CourseLessonRefSchema).min(1, 'Must list at least one lesson.')
+      })
+    )
+    .min(1, 'Field `modules` must contain at least one module.'),
+  schema: CourseSchemaSchema.optional()
+})
 
 export function validateCourseManifestStructure(
   data: unknown
 ): { ok: true; manifest: CourseManifestParsed } | { ok: false; errors: string[] } {
-  const errors: string[] = []
-
   if (data === null || typeof data !== 'object' || Array.isArray(data)) {
     return { ok: false, errors: ['Manifest must be a YAML object at the root.'] }
   }
 
-  const root = data as Record<string, unknown>
-
-  if (!isNonEmptyString(root.title)) {
-    errors.push('Field `title` must be a non-empty string.')
-  }
-
-  if (!Array.isArray(root.modules)) {
-    errors.push('Field `modules` must be an array.')
-  } else if (root.modules.length === 0) {
-    errors.push('Field `modules` must contain at least one module.')
-  } else {
-    root.modules.forEach((mod, i) => {
-      if (mod === null || typeof mod !== 'object' || Array.isArray(mod)) {
-        errors.push(`modules[${i}]: must be an object.`)
-        return
-      }
-      const m = mod as Record<string, unknown>
-      if (!isNonEmptyString(m.path)) {
-        errors.push(`modules[${i}].path must be a non-empty string.`)
-      } else if (!isSafeRelativePath(m.path.trim())) {
-        errors.push(`modules[${i}].path must be a safe relative path (no "..").`)
-      }
-      if (m.title !== undefined && m.title !== null) {
-        if (typeof m.title !== 'string') {
-          errors.push(`modules[${i}].title must be a string when set.`)
-        }
-      }
-      if (!Array.isArray(m.lessons)) {
-        errors.push(`modules[${i}].lessons must be an array.`)
-      } else if (m.lessons.length === 0) {
-        errors.push(`modules[${i}].lessons must list at least one lesson.`)
-      } else {
-        m.lessons.forEach((lesson, j) => {
-          if (isNonEmptyString(lesson)) {
-            if (!isSafeRelativePath(lesson.trim())) {
-              errors.push(`modules[${i}].lessons[${j}] must be a safe relative path (no "..").`)
-            }
-            return
-          }
-          if (lesson === null || typeof lesson !== 'object' || Array.isArray(lesson)) {
-            errors.push(
-              `modules[${i}].lessons[${j}] must be a string or an object with a "path" field.`
-            )
-            return
-          }
-          const lo = lesson as Record<string, unknown>
-          if (!isNonEmptyString(lo.path)) {
-            errors.push(`modules[${i}].lessons[${j}].path must be a non-empty string.`)
-          } else if (!isSafeRelativePath((lo.path as string).trim())) {
-            errors.push(`modules[${i}].lessons[${j}].path must be a safe relative path (no "..").`)
-          }
-          if (lo.title !== undefined && lo.title !== null && typeof lo.title !== 'string') {
-            errors.push(`modules[${i}].lessons[${j}].title must be a string when set.`)
-          }
-        })
-      }
+  const result = CourseManifestSchema.safeParse(data)
+  if (!result.success) {
+    const errors = result.error.issues.map((issue) => {
+      const path = issue.path.length > 0 ? issue.path.join('.') : ''
+      return path ? `${path}: ${issue.message}` : issue.message
     })
-  }
-
-  // Validate optional schema
-  let schema: CourseSchema | undefined
-  if (root.schema !== undefined && root.schema !== null) {
-    if (typeof root.schema !== 'object' || Array.isArray(root.schema)) {
-      errors.push('Field `schema` must be an object when set.')
-    } else {
-      const s = root.schema as Record<string, unknown>
-      if (!Array.isArray(s.lessonFields)) {
-        errors.push('Field `schema.lessonFields` must be an array.')
-      } else {
-        const fields: SchemaField[] = []
-        s.lessonFields.forEach((field, i) => {
-          if (field === null || typeof field !== 'object' || Array.isArray(field)) {
-            errors.push(`schema.lessonFields[${i}]: must be an object.`)
-            return
-          }
-          const f = field as Record<string, unknown>
-          if (!isNonEmptyString(f.name)) {
-            errors.push(`schema.lessonFields[${i}].name must be a non-empty string.`)
-            return
-          }
-          const fieldType = f.type === 'number' ? 'number' : 'string'
-          fields.push({
-            name: (f.name as string).trim(),
-            required: f.required === true,
-            type: fieldType
-          })
-        })
-        if (errors.length === 0) {
-          schema = { lessonFields: fields }
-        }
-      }
-    }
-  }
-
-  if (errors.length > 0) {
     return { ok: false, errors }
   }
 
-  const modules = (root.modules as object[]).map((mod) => {
-    const m = mod as Record<string, unknown>
-    const moduleTitle =
-      typeof m.title === 'string' && m.title.trim().length > 0 ? m.title.trim() : undefined
-    const rawLessons = m.lessons as unknown[]
-    const lessons: CourseLessonRef[] = rawLessons.map((lesson) => {
-      if (typeof lesson === 'string') {
-        const path = lesson.trim()
-        return { path }
-      }
-      const lo = lesson as Record<string, unknown>
-      const path = (lo.path as string).trim()
-      const lessonTitle =
-        typeof lo.title === 'string' && lo.title.trim().length > 0 ? lo.title.trim() : undefined
-      return lessonTitle !== undefined ? { path, title: lessonTitle } : { path }
-    })
-    return {
-      path: (m.path as string).trim(),
-      title: moduleTitle,
-      lessons
-    }
-  })
-
-  return {
-    ok: true,
-    manifest: {
-      title: (root.title as string).trim(),
-      modules,
-      ...(schema ? { schema } : {})
-    }
+  const parsed = result.data
+  const manifest: CourseManifestParsed = {
+    title: parsed.title,
+    modules: parsed.modules.map((mod) => ({
+      path: mod.path,
+      title: mod.title && mod.title.length > 0 ? mod.title : undefined,
+      lessons: mod.lessons.map((lesson) => {
+        if (lesson.title) return { path: lesson.path, title: lesson.title }
+        return { path: lesson.path }
+      })
+    })),
+    ...(parsed.schema ? { schema: parsed.schema } : {})
   }
+
+  return { ok: true, manifest }
 }

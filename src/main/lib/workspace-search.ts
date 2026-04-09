@@ -40,7 +40,8 @@ export async function searchWorkspaceMarkdown(
     let content: string
     try {
       content = await readFile(filePath, 'utf-8')
-    } catch {
+    } catch (e) {
+      console.debug(`Skipping unreadable file during search: ${filePath}`, e)
       continue
     }
     const lines = content.split(/\r?\n/)

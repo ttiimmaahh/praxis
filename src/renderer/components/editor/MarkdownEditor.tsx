@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'
 import type { Value } from 'platejs'
 import {
   BlockquotePlugin,
@@ -32,7 +32,7 @@ import {
 } from '@platejs/table/react'
 import { MarkdownPlugin } from '@platejs/markdown'
 import { DndPlugin } from '@platejs/dnd'
-import { Plate, PlateElement, usePlateEditor } from 'platejs/react'
+import { Plate, usePlateEditor } from 'platejs/react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import {
@@ -57,11 +57,11 @@ import {
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { Editor, EditorContainer } from '@/components/ui/editor'
 import { FixedToolbar } from '@/components/ui/fixed-toolbar'
-import { ToolbarButton, ToolbarGroup, ToolbarSeparator } from '@/components/ui/toolbar'
+import { ToolbarButton, ToolbarGroup } from '@/components/ui/toolbar'
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button'
 import { H1Element, H2Element, H3Element, H4Element, H5Element, H6Element } from '@/components/ui/heading-node'
 import { BlockquoteElement } from '@/components/ui/blockquote-node'
-import { ParagraphElement } from '@/components/ui/paragraph-node'
+
 import { CodeBlockElement, CodeLineElement, CodeSyntaxLeaf } from '@/components/ui/code-block-node'
 import { LinkElement } from '@/components/ui/link-node'
 import { LinkFloatingToolbar } from '@/components/ui/link-toolbar'

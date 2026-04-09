@@ -1,25 +1,25 @@
 import { useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
-import { yaml } from '@codemirror/lang-yaml'
+import { markdown } from '@codemirror/lang-markdown'
 import { EditorView } from '@codemirror/view'
 import { useAppearanceStore } from '@/stores/appearance-store'
 import { appEditorTheme } from '@/lib/codemirror-theme'
 
-export interface YamlEditorProps {
+interface RawMarkdownEditorProps {
   filePath: string
   content: string
   onContentChange: (filePath: string, newContent: string) => void
 }
 
-export function YamlEditor({
+export function RawMarkdownEditor({
   filePath,
   content,
   onContentChange
-}: YamlEditorProps): React.JSX.Element {
+}: RawMarkdownEditorProps): React.JSX.Element {
   const editorFontSizePx = useAppearanceStore((s) => s.editorFontSizePx)
 
   const extensions = useMemo(
-    () => [yaml(), EditorView.lineWrapping, appEditorTheme(editorFontSizePx)],
+    () => [markdown(), EditorView.lineWrapping, appEditorTheme(editorFontSizePx)],
     [editorFontSizePx]
   )
 

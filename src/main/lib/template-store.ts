@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, basename } from 'path'
 import { app } from 'electron'
 import { parse } from 'yaml'
+import { z } from 'zod'
 import { BUILT_IN_TEMPLATES, BUILT_IN_TEMPLATE_IDS } from './built-in-templates'
 import type { CourseTemplate, CourseTemplateMeta } from '../../shared/templates'
 import type { CourseSchema, SchemaField } from '../../shared/course-manifest'
@@ -19,6 +20,42 @@ export function getTemplatesDir(): string {
 export function setCustomTemplatesDir(dir: string | null): void {
   customTemplatesDir = dir
 }
+
+// ---------------------------------------------------------------------------
+// Zod schemas for template YAML
+// ---------------------------------------------------------------------------
+
+const TemplateMetaSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional()
+})
+
+const TemplateSchemaFieldSchema = z.object({
+  name: z.string().min(1),
+  required: z.boolean().optional().default(false),
+  type: z.enum(['string', 'number']).optional().default('string')
+})
+
+const TemplateLessonSchema = z.object({
+  file: z.string().optional().default('lesson.md'),
+  title: z.string().optional().default(''),
+  body: z.string().optional().default('# New Lesson\n\nStart writing here.\n')
+})
+
+const TemplateModuleSchema = z.object({
+  folder: z.string().optional().default('01-module'),
+  title: z.string().optional().default(''),
+  lessons: z.array(TemplateLessonSchema).optional().default([])
+})
+
+const TemplateSchema = TemplateMetaSchema.extend({
+  modules: z.array(TemplateModuleSchema),
+  schema: z
+    .object({ lessonFields: z.array(TemplateSchemaFieldSchema) })
+    .optional()
+})
+
+// ---------------------------------------------------------------------------
 
 /** Ensure the templates directory exists and seed built-in templates if missing. */
 export function ensureTemplatesSeeded(): void {
@@ -43,7 +80,8 @@ export function listTemplates(): CourseTemplateMeta[] {
   let files: string[]
   try {
     files = readdirSync(dir).filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'))
-  } catch {
+  } catch (e) {
+    console.error('Failed to read templates directory:', e)
     return []
   }
 
@@ -53,16 +91,17 @@ export function listTemplates(): CourseTemplateMeta[] {
     try {
       const raw = readFileSync(join(dir, file), 'utf-8')
       const parsed = parse(raw)
-      if (parsed && typeof parsed === 'object') {
+      const meta = TemplateMetaSchema.safeParse(parsed)
+      if (meta.success) {
         results.push({
           id,
-          name: typeof parsed.name === 'string' ? parsed.name : id,
-          description: typeof parsed.description === 'string' ? parsed.description : '',
+          name: meta.data.name ?? id,
+          description: meta.data.description ?? '',
           builtIn: BUILT_IN_TEMPLATE_IDS.includes(id)
         })
       }
-    } catch {
-      // Skip invalid files
+    } catch (e) {
+      console.warn(`Skipping invalid template ${file}:`, e)
     }
   }
 
@@ -79,26 +118,16 @@ export function listTemplates(): CourseTemplateMeta[] {
   return results
 }
 
-function parseSchemaFromYaml(data: Record<string, unknown>): CourseSchema | null {
-  if (!data.schema || typeof data.schema !== 'object' || Array.isArray(data.schema)) {
-    return null
-  }
-  const s = data.schema as Record<string, unknown>
-  if (!Array.isArray(s.lessonFields)) return null
-
-  const fields: SchemaField[] = []
-  for (const field of s.lessonFields) {
-    if (!field || typeof field !== 'object' || Array.isArray(field)) continue
-    const f = field as Record<string, unknown>
-    if (typeof f.name !== 'string' || f.name.trim().length === 0) continue
-    fields.push({
-      name: f.name.trim(),
-      required: f.required === true,
-      type: f.type === 'number' ? 'number' : 'string'
-    })
-  }
-
-  return fields.length > 0 ? { lessonFields: fields } : null
+function parseSchemaFromZod(
+  schema: z.infer<typeof TemplateSchema>['schema']
+): CourseSchema | null {
+  if (!schema || schema.lessonFields.length === 0) return null
+  const fields: SchemaField[] = schema.lessonFields.map((f) => ({
+    name: f.name.trim(),
+    required: f.required,
+    type: f.type
+  }))
+  return { lessonFields: fields }
 }
 
 /** Load and parse a specific template by ID. */
@@ -121,40 +150,29 @@ export function loadTemplate(id: string): CourseTemplate | null {
   let data: unknown
   try {
     data = parse(raw)
-  } catch {
+  } catch (e) {
+    console.error(`Failed to parse template ${id}:`, e)
     return null
   }
 
-  if (!data || typeof data !== 'object' || Array.isArray(data)) return null
-  const d = data as Record<string, unknown>
+  const result = TemplateSchema.safeParse(data)
+  if (!result.success) return null
 
-  if (!Array.isArray(d.modules)) return null
-
-  const schema = parseSchemaFromYaml(d)
-
-  const modules = d.modules.map((mod: unknown) => {
-    const m = mod as Record<string, unknown>
-    const lessons = Array.isArray(m.lessons)
-      ? m.lessons.map((lesson: unknown) => {
-          const l = lesson as Record<string, unknown>
-          return {
-            file: typeof l.file === 'string' ? l.file : 'lesson.md',
-            title: typeof l.title === 'string' ? l.title : '',
-            body: typeof l.body === 'string' ? l.body : '# New Lesson\n\nStart writing here.\n'
-          }
-        })
-      : []
-    return {
-      folder: typeof m.folder === 'string' ? m.folder : '01-module',
-      title: typeof m.title === 'string' ? m.title : '',
-      lessons
-    }
-  })
+  const template = result.data
+  const schema = parseSchemaFromZod(template.schema)
 
   return {
-    name: typeof d.name === 'string' ? d.name : id,
-    description: typeof d.description === 'string' ? d.description : '',
+    name: template.name ?? id,
+    description: template.description ?? '',
     schema,
-    modules
+    modules: template.modules.map((mod) => ({
+      folder: mod.folder,
+      title: mod.title,
+      lessons: mod.lessons.map((lesson) => ({
+        file: lesson.file,
+        title: lesson.title,
+        body: lesson.body
+      }))
+    }))
   }
 }

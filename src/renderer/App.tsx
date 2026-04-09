@@ -45,11 +45,13 @@ function App(): React.JSX.Element {
   }, [])
 
   useEffect(() => {
-    const saveInterval = setInterval(() => {
+    const lastSavedRef = { current: '' }
+
+    const buildSessionPayload = () => {
       const state = useWorkspaceStore.getState()
       const appearance = useAppearanceStore.getState()
       const courseSidebar = useCourseSidebarStore.getState()
-      window.electronAPI.saveSession({
+      return {
         rootPath: state.rootPath,
         openFiles: state.openTabs.map((tab) => ({
           filePath: tab.filePath,
@@ -62,27 +64,20 @@ function App(): React.JSX.Element {
         editorFontSizePx: appearance.editorFontSizePx,
         editorLineHeight: appearance.editorLineHeight,
         courseProjectFilesExpanded: courseSidebar.projectFilesOpen
-      })
+      }
+    }
+
+    const saveInterval = setInterval(() => {
+      const payload = buildSessionPayload()
+      const serialized = JSON.stringify(payload)
+      if (serialized !== lastSavedRef.current) {
+        lastSavedRef.current = serialized
+        window.electronAPI.saveSession(payload)
+      }
     }, 5000)
 
     const handleBeforeUnload = (): void => {
-      const state = useWorkspaceStore.getState()
-      const appearance = useAppearanceStore.getState()
-      const courseSidebar = useCourseSidebarStore.getState()
-      window.electronAPI.saveSession({
-        rootPath: state.rootPath,
-        openFiles: state.openTabs.map((tab) => ({
-          filePath: tab.filePath,
-          fileName: tab.fileName
-        })),
-        activeFilePath: state.activeTabPath,
-        sidebarWidth: state.sidebarWidth,
-        themeMode: appearance.themeMode,
-        editorFontPreset: appearance.editorFontPreset,
-        editorFontSizePx: appearance.editorFontSizePx,
-        editorLineHeight: appearance.editorLineHeight,
-        courseProjectFilesExpanded: courseSidebar.projectFilesOpen
-      })
+      window.electronAPI.saveSession(buildSessionPayload())
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
 

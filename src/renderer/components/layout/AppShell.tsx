@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import {
   Sidebar,
   SidebarContent,
@@ -16,11 +17,6 @@ import { SidebarCourseToolbar } from '@/components/course/SidebarCourseToolbar'
 import { useCourseStore } from '@/stores/course-store'
 import { EditorArea } from './EditorArea'
 import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
-import { CommandPalette } from '@/components/navigation/CommandPalette'
-import { WorkspaceSearchDialog } from '@/components/navigation/WorkspaceSearchDialog'
-import { TemplatePickerDialog } from '@/components/course/TemplatePickerDialog'
-import { LearnerView } from '@/components/learner/LearnerView'
-import { LearnerOutline } from '@/components/learner/LearnerOutline'
 import { basenameFromPath } from '@/lib/path-utils'
 import { SettingsMenu } from '@/components/settings/SettingsMenu'
 import { useWorkspaceStore } from '@/stores/workspace-store'
@@ -29,6 +25,27 @@ import { useSidebarResize } from '@/hooks/use-sidebar-resize'
 import { FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+
+// Lazy-loaded components: dialogs and conditional views
+const CommandPalette = lazy(() =>
+  import('@/components/navigation/CommandPalette').then((m) => ({ default: m.CommandPalette }))
+)
+const WorkspaceSearchDialog = lazy(() =>
+  import('@/components/navigation/WorkspaceSearchDialog').then((m) => ({
+    default: m.WorkspaceSearchDialog
+  }))
+)
+const TemplatePickerDialog = lazy(() =>
+  import('@/components/course/TemplatePickerDialog').then((m) => ({
+    default: m.TemplatePickerDialog
+  }))
+)
+const LearnerView = lazy(() =>
+  import('@/components/learner/LearnerView').then((m) => ({ default: m.LearnerView }))
+)
+const LearnerOutline = lazy(() =>
+  import('@/components/learner/LearnerOutline').then((m) => ({ default: m.LearnerOutline }))
+)
 
 const isMac = window.electronAPI.platform === 'darwin'
 
@@ -60,7 +77,9 @@ function SidebarExplorer(): React.JSX.Element {
       <SidebarContent>
         <ScrollArea className="h-full min-w-0">
           {learnerActive ? (
-            <LearnerOutline />
+            <Suspense fallback={null}>
+              <LearnerOutline />
+            </Suspense>
           ) : rootPath ? (
             <div className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col">
               {courseStatus === 'no-manifest' ? (
@@ -194,14 +213,20 @@ export function AppShell(): React.JSX.Element {
       style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
     >
       <KeyboardNavigationLayer />
-      <CommandPalette />
-      <WorkspaceSearchDialog />
-      <TemplatePickerDialog
-        open={templatePickerOpen}
-        showNameInput={templatePickerMode === 'new'}
-        onOpenChange={setTemplatePickerOpen}
-        onSelect={(id, name) => void handleTemplateSelected(id, name)}
-      />
+      <Suspense fallback={null}>
+        <CommandPalette />
+      </Suspense>
+      <Suspense fallback={null}>
+        <WorkspaceSearchDialog />
+      </Suspense>
+      <Suspense fallback={null}>
+        <TemplatePickerDialog
+          open={templatePickerOpen}
+          showNameInput={templatePickerMode === 'new'}
+          onOpenChange={setTemplatePickerOpen}
+          onSelect={(id, name) => void handleTemplateSelected(id, name)}
+        />
+      </Suspense>
       <Sidebar variant="inset" className="border-r-0">
         <SidebarExplorer />
         <SidebarResizeHandle />
@@ -209,7 +234,13 @@ export function AppShell(): React.JSX.Element {
       <SidebarInset className="min-h-0 ring-0 peer-data-[variant=inset]:shadow-none">
         <TitleBarInset />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {learnerActive ? <LearnerView /> : <EditorArea />}
+          {learnerActive ? (
+            <Suspense fallback={null}>
+              <LearnerView />
+            </Suspense>
+          ) : (
+            <EditorArea />
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>
