@@ -1,18 +1,81 @@
-# Praxis
+<div align="center">
+  <img src="resources/icon.png" alt="Praxis" width="128" height="128">
 
-A desktop course authoring and learning platform for technical developer training. Built with Electron, React, TypeScript, and Plate.js.
+  <h1>Praxis</h1>
+
+  <p>
+    <strong>A desktop course authoring and learning platform for technical developer training.</strong>
+  </p>
+
+  <p>
+    Built with Electron, React, TypeScript, and Plate.js.
+  </p>
+
+  <p>
+    <a href="https://github.com/ttiimmaahh/praxis/releases"><img src="https://img.shields.io/github/v/release/ttiimmaahh/praxis?label=latest" alt="Latest release"></a>
+    <a href="https://github.com/ttiimmaahh/praxis/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ttiimmaahh/praxis" alt="License"></a>
+    <img src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey" alt="Platform">
+  </p>
+</div>
 
 ## Features
 
-- Full Markdown editing with live preview via Milkdown
-- File tree sidebar with workspace management
+- Rich Markdown editing powered by [Plate.js](https://platejs.org) — live WYSIWYG with full keyboard support
+- File tree sidebar with workspace management and dirty-state tracking
 - Course authoring: define modules and lessons in `course.yaml`
 - Learner mode: read-only course navigation with progress tracking
 - Course templates: scaffold new courses from built-in or custom templates
 - Content schemas: validate lesson frontmatter against a defined schema
+- **Export to HTML and PDF** — single documents or entire courses, with customizable theme, page size, and orientation
 - Customizable appearance: theme, font, font size, line height
 - Workspace search across all Markdown files
+- Command palette (`⌘⇧P`) for fast keyboard-driven navigation
 - Session persistence (open tabs, sidebar width, theme settings)
+- Auto-updating on all platforms (macOS is signed + notarized)
+
+## Screenshots
+
+<!--
+  Screenshots live in docs/images/ so they never ship inside the packaged app
+  (docs/** is excluded via electron-builder.yml). To refresh a screenshot, just
+  replace the file in docs/images/ with the same name.
+-->
+
+### Workspace overview
+
+A course workspace with modules, lessons, and project files in the sidebar — no file open yet.
+
+![Praxis workspace overview](docs/images/editor_view_1.jpg)
+
+### Editing a lesson
+
+WYSIWYG Markdown editing with the formatting toolbar, tabbed files, and a live outline of headings.
+
+![Editing a lesson in Praxis](docs/images/editor_view_2.jpg)
+
+### Course authoring
+
+`course.yaml` open in the editor, showing the content schema and module/lesson structure that drives the course.
+
+![Authoring a course.yaml in Praxis](docs/images/editor_view_3.jpg)
+
+### Learner mode
+
+Reading a course in learner mode: lesson list, progress indicator, and prev/next navigation.
+
+![Learner mode reading view](docs/images/learner_view_1.jpg)
+
+### Progress tracking
+
+Per-module progress bars and a "Completed" pill as lessons are marked done.
+
+![Learner mode with progress tracking](docs/images/learner_view_2.jpg)
+
+### Settings & export preferences
+
+Appearance, typography, templates, and export preferences (theme, page size, orientation) all live in a single settings panel.
+
+![Praxis settings panel with export preferences](docs/images/settings.jpg)
 
 ## Getting Started
 

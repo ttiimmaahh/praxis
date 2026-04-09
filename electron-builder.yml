@@ -10,6 +10,9 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml}'
   - '!{CHANGELOG.md,README.md}'
+  # Docs + README screenshots live in the repo but should never ship in the
+  # packaged app — keeps installers from bloating with PNGs every release.
+  - '!docs/**'
 mac:
   target:
     - target: dmg
