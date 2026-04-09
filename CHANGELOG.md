@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.3 — Signed & Notarized macOS Builds
+
+### New
+
+- **macOS code signing** — Praxis is now signed with a Developer ID Application certificate and notarized by Apple. Gatekeeper opens the app cleanly on first launch — no more right-click-Open or `xattr` workaround.
+- **macOS auto-update works** — with a stable code-signing identity in place, Squirrel.Mac can now verify updates against the running app's Designated Requirement. v0.2.3 → v0.2.4 and every subsequent release will auto-update on macOS.
+
+### Fixed
+
+- **Silent auto-update failures on macOS** — previous ad-hoc signed builds produced a fresh random identity per build, so Squirrel.Mac refused to install any update. This is resolved for all releases starting with v0.2.3.
+
+### Heads up — one-time manual install required
+
+Because v0.2.2 and earlier were ad-hoc signed, the running app on your machine cannot verify v0.2.3 against its own Designated Requirement — the in-app updater will not be able to bridge this release. **Download the v0.2.3 DMG manually from the [Releases](https://github.com/ttiimmaahh/praxis/releases) page and install over your existing copy.** Every release after v0.2.3 will auto-update normally.
+
+### Under the Hood
+
+- `electron-builder.yml` — enabled `hardenedRuntime`, `notarize: true`, and wired a new `build/entitlements.mac.plist` granting the JIT / unsigned-executable-memory / library-validation exceptions Electron's V8 needs.
+- `.github/workflows/release.yml` — pipes `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID` into the `electron-builder` step on the macOS runner. Windows and Linux jobs ignore these env vars and continue to ship unsigned as before.
+
+---
+
 ## v0.2.2 — Update UX Polish
 
 ### New

@@ -218,6 +218,6 @@ The macOS build is **universal** — a single DMG works on both Apple Silicon an
 | Platform | Signing | Auto-update |
 |----------|---------|-------------|
 | Windows  | **Unsigned** — SmartScreen will show a warning on first launch; click "More info" → "Run anyway". No plans to purchase a code-signing certificate. | Works out of the box. |
-| macOS    | **Unsigned (ad-hoc) today**, Developer ID signing planned for a future release. Gatekeeper may block launch; right-click → Open, or run `xattr -dr com.apple.quarantine /Applications/Praxis.app`. | **Broken on current builds.** macOS Squirrel requires stable code-signing identity to verify updates; ad-hoc signed builds get a fresh identity per build and fail the designated-requirement check. The in-app updater notice will appear but the install step will silently no-op. For now, download the new DMG manually from Releases. Will be fixed once Developer ID signing is wired in. |
+| macOS    | **Signed with Developer ID Application & notarized by Apple** (v0.2.3+). Opens cleanly via Gatekeeper on first launch. | **Works** for v0.2.3 and later. Updating from v0.2.2 or earlier (unsigned) to v0.2.3 requires a one-time manual download from Releases — Squirrel.Mac cannot bridge the identity change from ad-hoc to Developer ID. Every subsequent release auto-updates normally. |
 | Linux    | Unsigned. | Works via AppImage's built-in update mechanism where supported. |
 
