@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.0 — Auto-Update
+
+### New
+
+- **In-app updates** — Praxis now checks for new versions automatically in the background and notifies you when an update is ready. Download happens silently; restart when you're ready.
+- **Version display** — the Settings menu now shows the current app version with a manual "Check for updates" button
+- **Update notification** — a non-intrusive toast appears in the bottom-left when an update is downloaded, with options to restart now or dismiss for later
+
+### Improved
+
+- **Settings menu** — scrollable on smaller windows so all options remain accessible
+- **CI workflow** — simplified release pipeline; electron-builder now publishes artifacts and update manifests directly to GitHub Releases
+
+### Under the Hood
+
+- Added `electron-updater` for cross-platform auto-update support
+- Update state managed via dedicated Zustand store
+- IPC bridge extended with update event subscriptions following existing patterns
+- Local update testing infrastructure with `dev-app-update.yml` and generic provider
+
+---
+
 ## v0.1.1 — Source View & Quality of Life
 
 ### New
