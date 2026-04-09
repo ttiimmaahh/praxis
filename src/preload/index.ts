@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 const electronAPI = {
   platform: process.platform as 'darwin' | 'win32' | 'linux',
 
+  getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
+
   openFolder: (): Promise<string | null> => ipcRenderer.invoke('dialog:openFolder'),
 
   readDirectory: (directoryPath: string): Promise<FileEntry[]> =>
@@ -82,6 +84,34 @@ const electronAPI = {
     }
     ipcRenderer.on('fs:change', handler)
     return () => ipcRenderer.removeListener('fs:change', handler)
+  },
+
+  checkForUpdates: (): Promise<void> => ipcRenderer.invoke('updater:checkForUpdates'),
+
+  quitAndInstall: (): Promise<void> => ipcRenderer.invoke('updater:quitAndInstall'),
+
+  onUpdateAvailable: (callback: (info: UpdateEventInfo) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: UpdateEventInfo): void => {
+      callback(data)
+    }
+    ipcRenderer.on('updater:available', handler)
+    return () => ipcRenderer.removeListener('updater:available', handler)
+  },
+
+  onUpdateDownloaded: (callback: (info: UpdateEventInfo) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: UpdateEventInfo): void => {
+      callback(data)
+    }
+    ipcRenderer.on('updater:downloaded', handler)
+    return () => ipcRenderer.removeListener('updater:downloaded', handler)
+  },
+
+  onUpdateError: (callback: (info: UpdateErrorInfo) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: UpdateErrorInfo): void => {
+      callback(data)
+    }
+    ipcRenderer.on('updater:error', handler)
+    return () => ipcRenderer.removeListener('updater:error', handler)
   }
 }
 

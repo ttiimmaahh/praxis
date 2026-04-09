@@ -1,5 +1,6 @@
-import { BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { getTitleBarOverlayForIsDark } from './lib/title-bar-overlay'
+import { checkForUpdates, quitAndInstall } from './lib/auto-updater'
 import {
   readDirectory,
   readFileContent,
@@ -190,6 +191,18 @@ export function registerIpcHandlers(): void {
       return unmarkLessonComplete(courseRoot, modulePath, lessonPath)
     }
   )
+
+  ipcMain.handle('app:getVersion', () => {
+    return app.getVersion()
+  })
+
+  ipcMain.handle('updater:checkForUpdates', async () => {
+    await checkForUpdates()
+  })
+
+  ipcMain.handle('updater:quitAndInstall', () => {
+    quitAndInstall()
+  })
 
   ipcMain.handle('window:setTitleBarOverlay', (event, payload: { isDark: boolean }) => {
     if (process.platform === 'darwin') return
