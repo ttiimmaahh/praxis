@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
 import { EditorView } from '@codemirror/view'
 import { useAppearanceStore } from '@/stores/appearance-store'
-import { useDocumentIsDark } from '@/hooks/use-document-is-dark'
+import { appEditorTheme } from '@/lib/codemirror-theme'
 
 interface RawMarkdownEditorProps {
   filePath: string
@@ -16,17 +16,12 @@ export function RawMarkdownEditor({
   content,
   onContentChange
 }: RawMarkdownEditorProps): React.JSX.Element {
-  const isDark = useDocumentIsDark()
   const editorFontSizePx = useAppearanceStore((s) => s.editorFontSizePx)
 
-  const extensions = useMemo(() => {
-    const fontTheme = EditorView.theme({
-      '.cm-content': { fontSize: `${editorFontSizePx}px` },
-      '.cm-gutters': { fontSize: `${editorFontSizePx}px` },
-      '.cm-lineNumbers .cm-gutterElement': { minWidth: '2.5ch' }
-    })
-    return [markdown(), EditorView.lineWrapping, fontTheme]
-  }, [editorFontSizePx])
+  const extensions = useMemo(
+    () => [markdown(), EditorView.lineWrapping, appEditorTheme(editorFontSizePx)],
+    [editorFontSizePx]
+  )
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
@@ -34,7 +29,7 @@ export function RawMarkdownEditor({
         className="min-h-0 flex-1 [&_.cm-editor]:flex [&_.cm-editor]:min-h-0 [&_.cm-editor]:flex-1 [&_.cm-editor]:flex-col [&_.cm-scroller]:min-h-0 [&_.cm-scroller]:flex-1"
         value={content}
         height="100%"
-        theme={isDark ? 'dark' : 'light'}
+        theme="none"
         extensions={extensions}
         basicSetup={{ lineNumbers: true, foldGutter: true, closeBrackets: true }}
         indentWithTab
