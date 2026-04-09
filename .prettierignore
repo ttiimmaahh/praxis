@@ -1,0 +1,5 @@
+out/
+release/
+node_modules/
+# shadcn/Plate-generated UI components have their own style
+src/renderer/components/ui/

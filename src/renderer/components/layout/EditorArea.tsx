@@ -175,6 +175,27 @@ export function EditorArea(): React.JSX.Element {
     }
   }, [])
 
+  // Clean up caches when tabs are closed to prevent unbounded memory growth
+  useEffect(() => {
+    let prevPaths = new Set(useWorkspaceStore.getState().openTabs.map((t) => t.filePath))
+    const unsub = useWorkspaceStore.subscribe((state) => {
+      const currentPaths = new Set(state.openTabs.map((t) => t.filePath))
+      for (const p of prevPaths) {
+        if (!currentPaths.has(p)) {
+          fileContentCache.delete(p)
+          frontmatterCache.delete(p)
+          const timer = saveTimersRef.current.get(p)
+          if (timer) {
+            clearTimeout(timer)
+            saveTimersRef.current.delete(p)
+          }
+        }
+      }
+      prevPaths = currentPaths
+    })
+    return unsub
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
       const mod = event.metaKey || event.ctrlKey
