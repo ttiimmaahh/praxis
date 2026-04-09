@@ -59,6 +59,15 @@ interface CourseProgress {
   completedLessons: string[]
 }
 
+interface UpdateEventInfo {
+  version: string
+  releaseNotes?: string
+}
+
+interface UpdateErrorInfo {
+  message: string
+}
+
 type ThemeMode = 'light' | 'dark' | 'system'
 type EditorFontPreset = 'system' | 'serif' | 'mono'
 
@@ -85,6 +94,7 @@ interface CourseTemplateMeta {
 
 interface ElectronAPI {
   platform: 'darwin' | 'win32' | 'linux'
+  getVersion: () => Promise<string>
   openFolder: () => Promise<string | null>
   readDirectory: (directoryPath: string) => Promise<FileEntry[]>
   readFile: (filePath: string) => Promise<string>
@@ -110,6 +120,11 @@ interface ElectronAPI {
   saveSession: (data: Partial<SessionData>) => Promise<void>
   setTitleBarOverlay: (options: { isDark: boolean }) => Promise<void>
   onFileSystemChange: (callback: (event: FileSystemChangeEvent) => void) => () => void
+  checkForUpdates: () => Promise<void>
+  quitAndInstall: () => Promise<void>
+  onUpdateAvailable: (callback: (info: UpdateEventInfo) => void) => () => void
+  onUpdateDownloaded: (callback: (info: UpdateEventInfo) => void) => () => void
+  onUpdateError: (callback: (info: UpdateErrorInfo) => void) => () => void
 }
 
 interface Window {

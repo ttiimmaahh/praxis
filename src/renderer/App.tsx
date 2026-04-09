@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AppShell } from '@/components/layout/AppShell'
+import { UpdateNotification } from '@/components/layout/UpdateNotification'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useAppearanceStore } from '@/stores/appearance-store'
+import { useUpdateStore } from '@/stores/update-store'
 import { useAppearanceSystemListener } from '@/hooks/use-appearance-system-listener'
 import { useCourseManifestSync } from '@/hooks/use-course-manifest-sync'
 import { useCourseSidebarStore } from '@/stores/course-sidebar-store'
@@ -42,6 +44,26 @@ function App(): React.JSX.Element {
         useCourseSidebarStore.getState().hydrate(session.courseProjectFilesExpanded)
       }
     })
+  }, [])
+
+  useEffect(() => {
+    const { setAvailable, setDownloaded, setError } = useUpdateStore.getState()
+
+    const unsubAvailable = window.electronAPI.onUpdateAvailable((info) => {
+      setAvailable(info.version)
+    })
+    const unsubDownloaded = window.electronAPI.onUpdateDownloaded((info) => {
+      setDownloaded(info.version)
+    })
+    const unsubError = window.electronAPI.onUpdateError((info) => {
+      setError(info.message)
+    })
+
+    return () => {
+      unsubAvailable()
+      unsubDownloaded()
+      unsubError()
+    }
   }, [])
 
   useEffect(() => {
@@ -92,6 +114,7 @@ function App(): React.JSX.Element {
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <AppShell />
       </div>
+      <UpdateNotification />
     </TooltipProvider>
   )
 }

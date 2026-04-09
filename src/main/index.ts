@@ -3,6 +3,7 @@ import { join } from 'path'
 import { getWindowState, trackWindowState } from './lib/window-state'
 import { getTitleBarOverlayOptions } from './lib/title-bar-overlay'
 import { registerIpcHandlers } from './ipc-handlers'
+import { initAutoUpdater } from './lib/auto-updater'
 
 const isMac = process.platform === 'darwin'
 
@@ -56,7 +57,8 @@ function createWindow(): BrowserWindow {
 
 app.whenReady().then(() => {
   registerIpcHandlers()
-  createWindow()
+  const mainWindow = createWindow()
+  initAutoUpdater(mainWindow)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

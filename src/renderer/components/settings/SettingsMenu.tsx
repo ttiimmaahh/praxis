@@ -4,8 +4,9 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { useAppearanceStore } from '@/stores/appearance-store'
+import { useUpdateStore } from '@/stores/update-store'
 import { cn } from '@/lib/utils'
-import { FolderOpen, RotateCcw, Settings } from 'lucide-react'
+import { FolderOpen, RefreshCw, RotateCcw, Settings } from 'lucide-react'
 
 const THEME_OPTIONS: Array<{ value: 'light' | 'dark' | 'system'; label: string }> = [
   { value: 'light', label: 'Light' },
@@ -32,6 +33,9 @@ export function SettingsMenu(): React.JSX.Element {
   const [reopenLastFolder, setReopenLastFolder] = useState(false)
   const [templatesDir, setTemplatesDir] = useState('')
   const [isCustomDir, setIsCustomDir] = useState(false)
+  const [appVersion, setAppVersion] = useState('')
+  const [checking, setChecking] = useState(false)
+  const updateStatus = useUpdateStore((s) => s.status)
 
   useEffect(() => {
     window.electronAPI.getSession().then((session) => {
@@ -39,6 +43,7 @@ export function SettingsMenu(): React.JSX.Element {
       setIsCustomDir(!!session.templatesDir)
     })
     window.electronAPI.getTemplatesDir().then(setTemplatesDir)
+    window.electronAPI.getVersion().then(setAppVersion)
   }, [])
 
   function handleReopenToggle(checked: boolean): void {
@@ -77,7 +82,7 @@ export function SettingsMenu(): React.JSX.Element {
           <Settings className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" side="bottom" className="w-[min(20rem,calc(100vw-2rem))] space-y-4 p-4">
+      <PopoverContent align="end" side="bottom" className="w-[min(20rem,calc(100vw-2rem))] max-h-[calc(100vh-5rem)] overflow-y-auto space-y-4 p-4">
         {/* ── Appearance ── */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Appearance</p>
@@ -213,9 +218,33 @@ export function SettingsMenu(): React.JSX.Element {
           </div>
         </div>
 
-        <p className="text-[10px] leading-relaxed text-muted-foreground/60">
-          All settings are saved automatically.
-        </p>
+        {/* ── About ── */}
+        <Separator />
+
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[12px] text-muted-foreground">
+            Praxis v{appVersion}
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 text-xs text-muted-foreground"
+            disabled={checking || updateStatus === 'downloading' || updateStatus === 'ready'}
+            onClick={() => {
+              setChecking(true)
+              window.electronAPI.checkForUpdates().finally(() => setChecking(false))
+            }}
+          >
+            <RefreshCw className={cn('h-3 w-3', checking && 'animate-spin')} />
+            {updateStatus === 'ready'
+              ? 'Update ready'
+              : updateStatus === 'downloading'
+                ? 'Downloading…'
+                : checking
+                  ? 'Checking…'
+                  : 'Check for updates'}
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   )

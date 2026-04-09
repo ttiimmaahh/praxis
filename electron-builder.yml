@@ -25,3 +25,8 @@ linux:
     - deb
   category: Education
   artifactName: ${name}-${version}-${arch}.${ext}
+publish:
+  provider: github
+  owner: ttiimmaahh
+  repo: praxis
+  releaseType: draft
