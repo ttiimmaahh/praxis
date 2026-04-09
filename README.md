@@ -206,3 +206,18 @@ npm run dev      # Start in development mode
 npm run build    # Build for production
 npm run lint     # Run ESLint
 ```
+
+## Installing & Updating
+
+Praxis ships for macOS (DMG, ZIP), Windows (NSIS installer), and Linux (AppImage, DEB). Grab the latest build from the [Releases](https://github.com/ttiimmaahh/praxis/releases) page.
+
+The macOS build is **universal** — a single DMG works on both Apple Silicon and Intel Macs.
+
+### Code signing
+
+| Platform | Signing | Auto-update |
+|----------|---------|-------------|
+| Windows  | **Unsigned** — SmartScreen will show a warning on first launch; click "More info" → "Run anyway". No plans to purchase a code-signing certificate. | Works out of the box. |
+| macOS    | **Unsigned (ad-hoc) today**, Developer ID signing planned for a future release. Gatekeeper may block launch; right-click → Open, or run `xattr -dr com.apple.quarantine /Applications/Praxis.app`. | **Broken on current builds.** macOS Squirrel requires stable code-signing identity to verify updates; ad-hoc signed builds get a fresh identity per build and fail the designated-requirement check. The in-app updater notice will appear but the install step will silently no-op. For now, download the new DMG manually from Releases. Will be fixed once Developer ID signing is wired in. |
+| Linux    | Unsigned. | Works via AppImage's built-in update mechanism where supported. |
+

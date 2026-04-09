@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { Toaster } from '@/components/ui/sonner'
 import { AppShell } from '@/components/layout/AppShell'
 import { UpdateNotification } from '@/components/layout/UpdateNotification'
 import { useWorkspaceStore } from '@/stores/workspace-store'
@@ -47,20 +49,39 @@ function App(): React.JSX.Element {
   }, [])
 
   useEffect(() => {
-    const { setAvailable, setDownloaded, setError } = useUpdateStore.getState()
-
     const unsubAvailable = window.electronAPI.onUpdateAvailable((info) => {
+      const { setAvailable, manualCheckPending, setManualCheckPending } =
+        useUpdateStore.getState()
       setAvailable(info.version)
+      if (manualCheckPending) {
+        setManualCheckPending(false)
+      }
     })
+
+    const unsubNotAvailable = window.electronAPI.onUpdateNotAvailable(() => {
+      const { manualCheckPending, setManualCheckPending } = useUpdateStore.getState()
+      if (manualCheckPending) {
+        setManualCheckPending(false)
+        toast.success("You're on the latest version")
+      }
+    })
+
     const unsubDownloaded = window.electronAPI.onUpdateDownloaded((info) => {
-      setDownloaded(info.version)
+      useUpdateStore.getState().setDownloaded(info.version)
     })
+
     const unsubError = window.electronAPI.onUpdateError((info) => {
+      const { setError, manualCheckPending, setManualCheckPending } = useUpdateStore.getState()
       setError(info.message)
+      if (manualCheckPending) {
+        setManualCheckPending(false)
+        toast.error('Update check failed', { description: info.message })
+      }
     })
 
     return () => {
       unsubAvailable()
+      unsubNotAvailable()
       unsubDownloaded()
       unsubError()
     }
@@ -115,6 +136,7 @@ function App(): React.JSX.Element {
         <AppShell />
       </div>
       <UpdateNotification />
+      <Toaster position="bottom-right" />
     </TooltipProvider>
   )
 }

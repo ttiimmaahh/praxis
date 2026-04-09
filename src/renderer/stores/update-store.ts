@@ -7,7 +7,15 @@ interface UpdateStore {
   newVersion: string | null
   errorMessage: string | null
   dismissed: boolean
+  /**
+   * Set when the user explicitly clicked "Check for updates" in Settings.
+   * Consumed by the `update-not-available` handler to show a "you're on the
+   * latest version" toast — background periodic checks should stay silent.
+   */
+  manualCheckPending: boolean
+  setManualCheckPending: (pending: boolean) => void
   setAvailable: (version: string) => void
+  startDownload: () => void
   setDownloaded: (version: string) => void
   setError: (message: string) => void
   dismiss: () => void
@@ -19,14 +27,34 @@ export const useUpdateStore = create<UpdateStore>()((set) => ({
   newVersion: null,
   errorMessage: null,
   dismissed: false,
+  manualCheckPending: false,
 
-  setAvailable: (version) => set({ status: 'downloading', newVersion: version, dismissed: false }),
+  setManualCheckPending: (pending) => set({ manualCheckPending: pending }),
 
-  setDownloaded: (version) => set({ status: 'ready', newVersion: version, dismissed: false }),
+  setAvailable: (version) =>
+    set({ status: 'available', newVersion: version, errorMessage: null, dismissed: false }),
 
-  setError: (message) => set({ status: 'error', errorMessage: message }),
+  startDownload: () => set({ status: 'downloading', dismissed: false }),
+
+  setDownloaded: (version) =>
+    set({ status: 'ready', newVersion: version, errorMessage: null, dismissed: false }),
+
+  // Don't clobber a ready state — once an update is downloaded it stays ready
+  // even if a later background check fails. Errors only show when we're not
+  // already sitting on a usable download.
+  setError: (message) =>
+    set((s) =>
+      s.status === 'ready' ? s : { status: 'error', errorMessage: message, dismissed: false }
+    ),
 
   dismiss: () => set({ dismissed: true }),
 
-  reset: () => set({ status: 'idle', newVersion: null, errorMessage: null, dismissed: false })
+  reset: () =>
+    set({
+      status: 'idle',
+      newVersion: null,
+      errorMessage: null,
+      dismissed: false,
+      manualCheckPending: false
+    })
 }))

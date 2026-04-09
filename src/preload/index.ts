@@ -88,6 +88,8 @@ const electronAPI = {
 
   checkForUpdates: (): Promise<void> => ipcRenderer.invoke('updater:checkForUpdates'),
 
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke('updater:downloadUpdate'),
+
   quitAndInstall: (): Promise<void> => ipcRenderer.invoke('updater:quitAndInstall'),
 
   onUpdateAvailable: (callback: (info: UpdateEventInfo) => void): (() => void) => {
@@ -96,6 +98,14 @@ const electronAPI = {
     }
     ipcRenderer.on('updater:available', handler)
     return () => ipcRenderer.removeListener('updater:available', handler)
+  },
+
+  onUpdateNotAvailable: (callback: (info: UpdateEventInfo) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: UpdateEventInfo): void => {
+      callback(data)
+    }
+    ipcRenderer.on('updater:not-available', handler)
+    return () => ipcRenderer.removeListener('updater:not-available', handler)
   },
 
   onUpdateDownloaded: (callback: (info: UpdateEventInfo) => void): (() => void) => {
