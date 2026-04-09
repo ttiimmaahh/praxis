@@ -1,20 +1,6 @@
-interface FileEntry {
-  name: string
-  path: string
-  isDirectory: boolean
-  extension: string
-}
-
-interface FileSystemChangeEvent {
-  type: 'add' | 'addDir' | 'change' | 'unlink' | 'unlinkDir'
-  path: string
-}
-
-interface WorkspaceSearchMatch {
-  filePath: string
-  line: number
-  lineText: string
-}
+// Data types shared with main/preload live in `src/shared/global.d.ts`.
+// Only renderer-specific declarations (DOM augmentations, course-manifest
+// duplicates still referenced by ElectronAPI below) remain here.
 
 type CourseLessonRef = {
   path: string
@@ -54,36 +40,6 @@ type CreateNewCourseFolderResult =
   | null
   | { ok: true; folderPath: string }
   | { ok: false; error: string }
-
-interface CourseProgress {
-  completedLessons: string[]
-}
-
-interface UpdateEventInfo {
-  version: string
-  releaseNotes?: string
-}
-
-interface UpdateErrorInfo {
-  message: string
-}
-
-type ThemeMode = 'light' | 'dark' | 'system'
-type EditorFontPreset = 'system' | 'serif' | 'mono'
-
-interface SessionData {
-  rootPath: string | null
-  openFiles: Array<{ filePath: string; fileName: string }>
-  activeFilePath: string | null
-  sidebarWidth: number
-  themeMode?: ThemeMode
-  editorFontPreset?: EditorFontPreset
-  editorFontSizePx?: number
-  editorLineHeight?: number
-  courseProjectFilesExpanded?: boolean
-  reopenLastFolder?: boolean
-  templatesDir?: string
-}
 
 interface CourseTemplateMeta {
   id: string

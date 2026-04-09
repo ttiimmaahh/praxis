@@ -12,8 +12,10 @@ files:
   - '!{CHANGELOG.md,README.md}'
 mac:
   target:
-    - dmg
-    - zip
+    - target: dmg
+      arch: universal
+    - target: zip
+      arch: universal
   artifactName: ${name}-${version}-${arch}.${ext}
 win:
   target:

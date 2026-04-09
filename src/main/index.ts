@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
+import icon from '../../resources/icon.png?asset'
 import { getWindowState, trackWindowState } from './lib/window-state'
 import { getTitleBarOverlayOptions } from './lib/title-bar-overlay'
 import { registerIpcHandlers } from './ipc-handlers'
@@ -19,6 +20,7 @@ function createWindow(): BrowserWindow {
     minHeight: 400,
     show: false,
     titleBarStyle: 'hidden',
+    icon,
     ...(isMac
       ? {
           trafficLightPosition: { x: 16, y: 21 },
@@ -56,6 +58,12 @@ function createWindow(): BrowserWindow {
 }
 
 app.whenReady().then(() => {
+  // In dev on macOS there's no bundled .icns yet, so the dock falls back to the
+  // default Electron icon. setIcon gives us the real icon during `npm run dev`.
+  if (isMac && !app.isPackaged) {
+    app.dock?.setIcon(icon)
+  }
+
   registerIpcHandlers()
   const mainWindow = createWindow()
   initAutoUpdater(mainWindow)

@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.2.1 — Icon & Universal Mac
+
+### New
+
+- **Application icon** — Praxis now has a proper app icon that shows in the dock, taskbar, and installer. No more default Electron icon.
+- **Universal macOS build** — the Mac DMG and ZIP now include both Apple Silicon (arm64) and Intel (x64) slices in a single artifact. Intel Mac users can finally install Praxis natively without Rosetta.
+
+### Under the Hood
+
+- Shared ambient TypeScript types moved from `src/renderer/env.d.ts` into `src/shared/global.d.ts` so the preload and main processes can see them. Resolved 17 latent type errors surfaced by `tsc -p tsconfig.node.json`.
+- Fixed a Zod union narrowing bug in `course-manifest.ts` when lessons were specified as bare path strings instead of `{ path, title }` objects.
+- Corrected a stale `tsconfig.web.json` reference to `electron-vite/client` (which no longer exists in the installed version) — renderer type-checking now actually runs.
+- Wired the new icon into `BrowserWindow` and `app.dock.setIcon()` so it also appears correctly during `npm run dev`.
+
+---
+
 ## v0.2.0 — Auto-Update
 
 ### New

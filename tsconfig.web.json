@@ -16,7 +16,7 @@
       "@/*": ["src/renderer/*"],
       "@shared/*": ["src/shared/*"]
     },
-    "types": ["electron-vite/client"]
+    "types": ["vite/client"]
   },
   "include": ["src/renderer/**/*", "src/shared/**/*"]
 }
