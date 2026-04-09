@@ -30,6 +30,12 @@ import {
   setCustomTemplatesDir,
   ensureTemplatesSeeded
 } from './lib/template-store'
+import {
+  handleExportDocumentHtml,
+  handleExportDocumentPdf,
+  handleExportCourseHtml,
+  handleExportCoursePdf
+} from './lib/export/export-handlers'
 
 export function registerIpcHandlers(): void {
   // Initialize custom templates dir from saved session
@@ -207,6 +213,22 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('updater:quitAndInstall', () => {
     quitAndInstall()
   })
+
+  ipcMain.handle('export:documentHtml', (_event, payload: DocumentExportPayload) =>
+    handleExportDocumentHtml(payload)
+  )
+
+  ipcMain.handle('export:documentPdf', (_event, payload: DocumentPdfExportPayload) =>
+    handleExportDocumentPdf(payload)
+  )
+
+  ipcMain.handle('export:courseHtml', (_event, payload: CourseExportPayload) =>
+    handleExportCourseHtml(payload)
+  )
+
+  ipcMain.handle('export:coursePdf', (_event, payload: CoursePdfExportPayload) =>
+    handleExportCoursePdf(payload)
+  )
 
   ipcMain.handle('window:setTitleBarOverlay', (event, payload: { isDark: boolean }) => {
     if (process.platform === 'darwin') return

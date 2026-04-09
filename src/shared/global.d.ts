@@ -42,6 +42,41 @@ interface UpdateErrorInfo {
 
 type ThemeMode = 'light' | 'dark' | 'system'
 type EditorFontPreset = 'system' | 'serif' | 'mono'
+type ExportTheme = 'light' | 'dark'
+type ExportPageSize = 'letter' | 'a4'
+type ExportOrientation = 'portrait' | 'landscape'
+
+interface DocumentExportPayload {
+  bodyHtml: string
+  sourceFilePath: string
+  documentTitle: string
+  theme: ExportTheme
+}
+
+interface DocumentPdfExportPayload extends DocumentExportPayload {
+  pageSize: ExportPageSize
+  orientation: ExportOrientation
+}
+
+interface LessonExportEntry {
+  moduleSlug: string
+  moduleTitle: string
+  lessonSlug: string
+  lessonTitle: string
+  lessonFilePath: string
+  bodyHtml: string
+}
+
+interface CourseExportPayload {
+  courseTitle: string
+  lessons: LessonExportEntry[]
+  theme: ExportTheme
+}
+
+interface CoursePdfExportPayload extends CourseExportPayload {
+  pageSize: ExportPageSize
+  orientation: ExportOrientation
+}
 
 interface SessionData {
   rootPath: string | null
@@ -55,4 +90,7 @@ interface SessionData {
   courseProjectFilesExpanded?: boolean
   reopenLastFolder?: boolean
   templatesDir?: string
+  exportTheme?: ExportTheme
+  exportPageSize?: ExportPageSize
+  exportOrientation?: ExportOrientation
 }

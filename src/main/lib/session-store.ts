@@ -2,6 +2,9 @@ import { JsonStore } from './json-store'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
 export type EditorFontPreset = 'system' | 'serif' | 'mono'
+export type ExportTheme = 'light' | 'dark'
+export type ExportPageSize = 'letter' | 'a4'
+export type ExportOrientation = 'portrait' | 'landscape'
 
 interface SessionData {
   rootPath: string | null
@@ -18,6 +21,10 @@ interface SessionData {
   reopenLastFolder?: boolean
   /** Custom templates directory path. If unset, uses default userData/templates/. */
   templatesDir?: string
+  /** Export preferences (applied to single-doc and course export output). */
+  exportTheme?: ExportTheme
+  exportPageSize?: ExportPageSize
+  exportOrientation?: ExportOrientation
 }
 
 const DEFAULTS: SessionData = {
@@ -30,7 +37,10 @@ const DEFAULTS: SessionData = {
   editorFontSizePx: 16,
   editorLineHeight: 1.65,
   courseProjectFilesExpanded: false,
-  reopenLastFolder: false
+  reopenLastFolder: false,
+  exportTheme: 'light',
+  exportPageSize: 'letter',
+  exportOrientation: 'portrait'
 }
 
 let store: JsonStore<{ session: SessionData }>

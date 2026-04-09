@@ -75,6 +75,18 @@ const electronAPI = {
   ): Promise<CourseProgress> =>
     ipcRenderer.invoke('progress:unmarkComplete', courseRoot, modulePath, lessonPath),
 
+  exportDocumentHtml: (payload: DocumentExportPayload): Promise<string | null> =>
+    ipcRenderer.invoke('export:documentHtml', payload),
+
+  exportDocumentPdf: (payload: DocumentPdfExportPayload): Promise<string | null> =>
+    ipcRenderer.invoke('export:documentPdf', payload),
+
+  exportCourseHtml: (payload: CourseExportPayload): Promise<string | null> =>
+    ipcRenderer.invoke('export:courseHtml', payload),
+
+  exportCoursePdf: (payload: CoursePdfExportPayload): Promise<string | null> =>
+    ipcRenderer.invoke('export:coursePdf', payload),
+
   setTitleBarOverlay: (options: { isDark: boolean }): Promise<void> =>
     ipcRenderer.invoke('window:setTitleBarOverlay', options),
 

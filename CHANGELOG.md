@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.2.4 — Document & Course Export
+
+Praxis can now export your work to HTML and PDF — whether it's a single Markdown file or an entire course.
+
+### New
+
+- **Single-document export** — export the active file to a self-contained HTML file (images inlined as data URIs, CSS embedded) or to PDF. Live edits are respected: if you have unsaved changes, the export reflects the editor buffer, not the on-disk version.
+- **Course export** — when a `course.yaml` is loaded, export the whole course as:
+  - A **multi-page HTML bundle**: `index.html` cover + TOC, one `lessons/<module>/<lesson>.html` per lesson, shared `assets/export.css`, a persistent module/lesson nav sidebar, and prev/next links between adjacent lessons.
+  - A **single concatenated PDF**: cover page, table of contents, and every lesson starting on a fresh page with the course title and page numbers in the footer.
+- **Export preferences** — new "Export" section in Settings for theme (light / dark), page size (Letter / A4), and orientation (portrait / landscape). Persists across sessions.
+- **Sidebar export button** — new `Download` icon in the sidebar header, next to "New course". Dropdown groups entries under **Document** and **Course** sections; Course entries only appear when a course is loaded.
+- **Command palette entries** — "Export document as HTML/PDF…" and (when a course is loaded) "Export course as HTML/PDF…" under the File group.
+- **Keyboard shortcut** — `⌘⇧X` / `Ctrl+Shift+X` exports the active document as HTML.
+- **Learner-mode export** — the current lesson you're reading in learner mode is exportable too: sidebar button, command palette, and keyboard shortcut all treat the learner's current lesson as the active document.
+- **Auto-save before course export** — if any files in the course are dirty, they're saved to disk before the export walker runs, so the PDF/HTML reflects your latest edits. A toast confirms what was saved.
+
+### Improved
+
+- **PDF typography** — exported PDFs now use a serif body (Charter / Iowan Old Style / Palatino / Georgia) with sans-serif headings, 11pt/1.55 line-height, orphans/widows protection, `break-inside: avoid` on code blocks, tables, and images, and `break-after: avoid` on headings so they don't strand at page bottoms.
+- **PDF page chrome** — footer shows `{Course or Document Title} • {page} / {total}` on every page via Electron's `displayHeaderFooter`. Table headers repeat on every page a table spans.
+- **Hyperlink traceability in print** — external links render in body color with the URL shown in small grey after the link text, so paper readers can still see where a link points.
+
+### Fixed
+
+- **YAML frontmatter leaking into exports** — lesson files with `---` frontmatter no longer render the frontmatter block as body text in the PDF/HTML.
+- **Code block edit-time chrome in exports** — the language picker, format button, and copy button are now stripped from exported code blocks via a hooks-free `CodeBlockElementStatic` variant, eliminating a React "Invalid hook call" crash that previously broke course export entirely.
+- **Blank pages between lessons in course PDF** — removed a double `page-break-before` that stacked an explicit `<div class="page-break">` on top of the CSS `.praxis-lesson { break-before: page }` rule, producing an empty page between every lesson.
+- **Duplicate lesson titles in course PDF** — the export pipeline no longer injects the manifest title on top of the markdown's own `# Heading`. The markdown owns its title; the uppercase module label above provides the module context.
+
+### Under the Hood
+
+- New shared `getSharedPlatePlugins({ exportMode, includeDnd })` factory keeps editor and export rendering on the same plugin pipeline, so exports match what users see in the editor.
+- Headless Plate rendering via `createPlateEditor` + `PlateStatic` + `renderToStaticMarkup`, statically imported to keep `react-dom/server` in the main bundle. Plate's own `serializeHtml` dynamic-imports the server module, which Vite code-split into a chunk with a second React instance — that's what caused the "Invalid hook call" crash on course export, now resolved by bypassing it.
+- `liveMarkdownByPath` slice in `workspace-store` (non-persisted) tracks the editor's live markdown so single-doc export can honor dirty buffers without forcing a save first.
+- Main-process export service: image inlining to data URIs, offscreen `BrowserWindow.printToPDF` pipeline with custom header/footer templates and a 15-second timeout safety valve, and a hand-ported `export.css` so exports stay self-contained (no Tailwind runtime).
+- Four new IPC handlers: `export:documentHtml`, `export:documentPdf`, `export:courseHtml`, `export:coursePdf`.
+- Completes Phase 9 / issue [#18](https://github.com/ttiimmaahh/praxis/issues/18).
+
+### Heads up — auto-update validation
+
+v0.2.4 is the first release that will test the signed → signed auto-update path end-to-end. If you're running v0.2.3 (the signed build), the in-app updater should be able to bridge you to v0.2.4 without a manual DMG download for the first time on macOS.
+
+---
+
 ## v0.2.3 — Signed & Notarized macOS Builds
 
 ### New

@@ -1,40 +1,7 @@
 import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react'
 import type { Value } from 'platejs'
-import {
-  BlockquotePlugin,
-  BoldPlugin,
-  CodePlugin,
-  H1Plugin,
-  H2Plugin,
-  H3Plugin,
-  H4Plugin,
-  H5Plugin,
-  H6Plugin,
-  HorizontalRulePlugin,
-  ItalicPlugin,
-  StrikethroughPlugin,
-} from '@platejs/basic-nodes/react'
-import { CodeBlockPlugin, CodeLinePlugin, CodeSyntaxPlugin } from '@platejs/code-block/react'
-import { LinkPlugin } from '@platejs/link/react'
-import { ImagePlugin } from '@platejs/media/react'
-import {
-  BulletedListPlugin,
-  ListItemPlugin,
-  ListPlugin,
-  NumberedListPlugin,
-  TaskListPlugin,
-} from '@platejs/list-classic/react'
-import {
-  TableCellHeaderPlugin,
-  TableCellPlugin,
-  TablePlugin,
-  TableRowPlugin,
-} from '@platejs/table/react'
 import { MarkdownPlugin } from '@platejs/markdown'
-import { DndPlugin } from '@platejs/dnd'
 import { Plate, usePlateEditor } from 'platejs/react'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
 import {
   Bold,
   Code,
@@ -55,25 +22,11 @@ import {
 } from 'lucide-react'
 
 import { useWorkspaceStore } from '@/stores/workspace-store'
+import { getSharedPlatePlugins } from '@/lib/plate-plugins'
 import { Editor, EditorContainer } from '@/components/ui/editor'
 import { FixedToolbar } from '@/components/ui/fixed-toolbar'
 import { ToolbarButton, ToolbarGroup } from '@/components/ui/toolbar'
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button'
-import { H1Element, H2Element, H3Element, H4Element, H5Element, H6Element } from '@/components/ui/heading-node'
-import { BlockquoteElement } from '@/components/ui/blockquote-node'
-
-import { CodeBlockElement, CodeLineElement, CodeSyntaxLeaf } from '@/components/ui/code-block-node'
-import { LinkElement } from '@/components/ui/link-node'
-import { LinkFloatingToolbar } from '@/components/ui/link-toolbar'
-import { ImageElement } from '@/components/ui/image-node'
-import { HrElement } from '@/components/ui/hr-node'
-import {
-  BulletedListElement,
-  ListItemElement,
-  NumberedListElement,
-  TaskListElement,
-} from '@/components/ui/list-classic-node'
-import { TableElement, TableCellElement, TableCellHeaderElement, TableRowElement } from '@/components/ui/table-node'
 
 export interface MarkdownEditorHandle {
   scrollToHeadingIndex: (headingIndex: number) => void
@@ -94,62 +47,11 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
     const onContentChangeRef = useRef(onContentChange)
     onContentChangeRef.current = onContentChange
     const markDirty = useWorkspaceStore((s) => s.markDirty)
+    const setLiveMarkdown = useWorkspaceStore((s) => s.setLiveMarkdown)
 
     const editor = usePlateEditor(
       {
-        plugins: [
-          // Marks
-          BoldPlugin,
-          ItalicPlugin,
-          StrikethroughPlugin,
-          CodePlugin,
-          // Block elements
-          H1Plugin.withComponent(H1Element),
-          H2Plugin.withComponent(H2Element),
-          H3Plugin.withComponent(H3Element),
-          H4Plugin.withComponent(H4Element),
-          H5Plugin.withComponent(H5Element),
-          H6Plugin.withComponent(H6Element),
-          BlockquotePlugin.withComponent(BlockquoteElement),
-          HorizontalRulePlugin.withComponent(HrElement),
-          // Code blocks
-          CodeBlockPlugin.withComponent(CodeBlockElement),
-          CodeLinePlugin.withComponent(CodeLineElement),
-          CodeSyntaxPlugin.withComponent(CodeSyntaxLeaf),
-          // Links
-          LinkPlugin.configure({
-            render: {
-              node: LinkElement,
-              afterEditable: () => <LinkFloatingToolbar />,
-            },
-          }),
-          // Images
-          ImagePlugin.withComponent(ImageElement),
-          // Lists
-          ListPlugin,
-          BulletedListPlugin.withComponent(BulletedListElement),
-          NumberedListPlugin.withComponent(NumberedListElement),
-          TaskListPlugin.withComponent(TaskListElement),
-          ListItemPlugin.withComponent(ListItemElement),
-          // Tables
-          TablePlugin.configure({
-            node: { component: TableElement },
-          }),
-          TableRowPlugin.withComponent(TableRowElement),
-          TableCellPlugin.withComponent(TableCellElement),
-          TableCellHeaderPlugin.withComponent(TableCellHeaderElement),
-          // Markdown serialization
-          MarkdownPlugin,
-          // DnD
-          DndPlugin.configure({
-            options: { enableScroller: true },
-            render: {
-              aboveSlate: ({ children }) => (
-                <DndProvider backend={HTML5Backend}>{children}</DndProvider>
-              ),
-            },
-          }),
-        ],
+        plugins: getSharedPlatePlugins(),
         value: (editor) => editor.getApi(MarkdownPlugin).markdown.deserialize(content),
       },
       [content]
@@ -192,8 +94,9 @@ export const MarkdownEditor = forwardRef<MarkdownEditorHandle, MarkdownEditorPro
         const md = editor.getApi(MarkdownPlugin).markdown.serialize({ value })
         onContentChangeRef.current(filePathRef.current, md)
         markDirty(filePathRef.current, true)
+        setLiveMarkdown(filePathRef.current, md)
       },
-      [editor, markDirty]
+      [editor, markDirty, setLiveMarkdown]
     )
 
     return (

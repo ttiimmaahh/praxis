@@ -6,6 +6,8 @@ import {
   persistCourseProjectFilesExpanded,
   useCourseSidebarStore
 } from '@/stores/course-sidebar-store'
+import { exportActiveDocumentAs } from '@/lib/export/export-actions'
+import { useLearnerStore } from '@/stores/learner-store'
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
@@ -62,6 +64,24 @@ export function KeyboardNavigationLayer(): React.JSX.Element {
         event.preventDefault()
         useCourseSidebarStore.getState().toggleProjectFiles()
         persistCourseProjectFilesExpanded()
+        return
+      }
+
+      if (key === 'x' && event.shiftKey) {
+        if (isEditableTarget(event.target)) return
+        // Allow the shortcut in learner mode (current lesson) as well as editor
+        // mode (active tab). Matches the sidebar button and palette gating.
+        const learner = useLearnerStore.getState()
+        const hasLearnerLesson =
+          learner.active &&
+          learner.flatLessons.length > 0 &&
+          !!learner.flatLessons[learner.currentIndex]
+        const hasActiveDocument = learner.active
+          ? hasLearnerLesson
+          : !!useWorkspaceStore.getState().activeTabPath
+        if (!hasActiveDocument) return
+        event.preventDefault()
+        void exportActiveDocumentAs('html')
         return
       }
 

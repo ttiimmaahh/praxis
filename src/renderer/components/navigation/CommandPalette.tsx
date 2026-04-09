@@ -18,6 +18,7 @@ import {
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import {
   BookPlus,
+  Download,
   Eye,
   FileSearch,
   FolderOpen,
@@ -30,6 +31,7 @@ import {
   Settings,
   X
 } from 'lucide-react'
+import { exportActiveCourseAs, exportActiveDocumentAs } from '@/lib/export/export-actions'
 import { useCourseStore } from '@/stores/course-store'
 import { useLearnerStore } from '@/stores/learner-store'
 import {
@@ -52,14 +54,21 @@ export function CommandPalette(): React.JSX.Element {
   const manifest = useCourseStore((s) => s.manifest)
   const courseReady = courseStatus === 'ready'
   const learnerActive = useLearnerStore((s) => s.active)
+  const learnerHasLesson = useLearnerStore(
+    (s) => s.active && s.flatLessons.length > 0 && !!s.flatLessons[s.currentIndex]
+  )
 
   const canEdit = activeTabPath !== null
+  // Export-only: learner mode has no tabs but still has a "current document"
+  // (the lesson being read). Save/close etc. still gate on `canEdit`.
+  const hasActiveDocument = learnerActive ? learnerHasLesson : canEdit
 
   const shortcuts = useMemo(
     () => ({
       save: `${mod}S`,
       close: `${mod}W`,
       openFolder: `${mod}O`,
+      exportHtml: `${mod}⇧X`,
       workspaceSearch: `${mod}⇧F`,
       toggleSidebar: `${mod}B`,
       toggleOutline: `${mod}⇧O`,
@@ -119,6 +128,49 @@ export function CommandPalette(): React.JSX.Element {
                 <span>Open folder…</span>
                 <span className="ml-auto text-xs text-muted-foreground">{shortcuts.openFolder}</span>
               </CommandItem>
+              <CommandItem
+                disabled={!hasActiveDocument}
+                onSelect={() => {
+                  setOpen(false)
+                  void exportActiveDocumentAs('html')
+                }}
+              >
+                <Download className="text-muted-foreground" />
+                <span>Export document as HTML…</span>
+                <span className="ml-auto text-xs text-muted-foreground">{shortcuts.exportHtml}</span>
+              </CommandItem>
+              <CommandItem
+                disabled={!hasActiveDocument}
+                onSelect={() => {
+                  setOpen(false)
+                  void exportActiveDocumentAs('pdf')
+                }}
+              >
+                <Download className="text-muted-foreground" />
+                <span>Export document as PDF…</span>
+              </CommandItem>
+              {courseReady && (
+                <>
+                  <CommandItem
+                    onSelect={() => {
+                      setOpen(false)
+                      void exportActiveCourseAs('html')
+                    }}
+                  >
+                    <Download className="text-muted-foreground" />
+                    <span>Export course as HTML…</span>
+                  </CommandItem>
+                  <CommandItem
+                    onSelect={() => {
+                      setOpen(false)
+                      void exportActiveCourseAs('pdf')
+                    }}
+                  >
+                    <Download className="text-muted-foreground" />
+                    <span>Export course as PDF…</span>
+                  </CommandItem>
+                </>
+              )}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Workspace">

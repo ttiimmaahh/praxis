@@ -14,6 +14,7 @@ import { FileTree } from '@/components/file-tree/FileTree'
 import { CoursePanel } from '@/components/course/CoursePanel'
 import { ProjectFilesSection } from '@/components/course/ProjectFilesSection'
 import { SidebarCourseToolbar } from '@/components/course/SidebarCourseToolbar'
+import { SidebarExportButton } from '@/components/export/SidebarExportButton'
 import { useCourseStore } from '@/stores/course-store'
 import { EditorArea } from './EditorArea'
 import { KeyboardNavigationLayer } from './KeyboardNavigationLayer'
@@ -72,6 +73,7 @@ function SidebarExplorer(): React.JSX.Element {
       <SidebarHeader className="flex h-[38px] flex-row items-center justify-end gap-1 border-b border-border/40 px-2 py-0 app-drag-region">
         <div className="pointer-events-auto flex items-center gap-0.5 no-drag">
           <SidebarCourseToolbar />
+          <SidebarExportButton />
         </div>
       </SidebarHeader>
       <SidebarContent>
