@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { UpdateNotification } from '@/components/layout/UpdateNotification'
 import { useWorkspaceStore } from '@/stores/workspace-store'
 import { useAppearanceStore } from '@/stores/appearance-store'
+import { useExportStore } from '@/stores/export-store'
 import { useUpdateStore } from '@/stores/update-store'
 import { useAppearanceSystemListener } from '@/hooks/use-appearance-system-listener'
 import { useCourseManifestSync } from '@/hooks/use-course-manifest-sync'
@@ -40,6 +41,12 @@ function App(): React.JSX.Element {
         editorFontPreset: session.editorFontPreset,
         editorFontSizePx: session.editorFontSizePx,
         editorLineHeight: session.editorLineHeight
+      })
+
+      useExportStore.getState().hydrate({
+        exportTheme: session.exportTheme,
+        exportPageSize: session.exportPageSize,
+        exportOrientation: session.exportOrientation
       })
 
       if (typeof session.courseProjectFilesExpanded === 'boolean') {
@@ -136,7 +143,7 @@ function App(): React.JSX.Element {
         <AppShell />
       </div>
       <UpdateNotification />
-      <Toaster position="bottom-right" />
+      <Toaster position="bottom-left" />
     </TooltipProvider>
   )
 }

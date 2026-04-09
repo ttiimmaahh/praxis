@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { useAppearanceStore } from '@/stores/appearance-store'
+import { useExportStore } from '@/stores/export-store'
 import { useUpdateStore } from '@/stores/update-store'
 import { cn } from '@/lib/utils'
 import { FolderOpen, RefreshCw, RotateCcw, Settings } from 'lucide-react'
@@ -20,6 +21,21 @@ const FONT_OPTIONS: Array<{ value: 'system' | 'serif' | 'mono'; label: string }>
   { value: 'mono', label: 'Monospace' }
 ]
 
+const EXPORT_THEME_OPTIONS: Array<{ value: ExportTheme; label: string }> = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' }
+]
+
+const EXPORT_PAGE_SIZE_OPTIONS: Array<{ value: ExportPageSize; label: string }> = [
+  { value: 'letter', label: 'Letter' },
+  { value: 'a4', label: 'A4' }
+]
+
+const EXPORT_ORIENTATION_OPTIONS: Array<{ value: ExportOrientation; label: string }> = [
+  { value: 'portrait', label: 'Portrait' },
+  { value: 'landscape', label: 'Landscape' }
+]
+
 export function SettingsMenu(): React.JSX.Element {
   const themeMode = useAppearanceStore((s) => s.themeMode)
   const editorFontPreset = useAppearanceStore((s) => s.editorFontPreset)
@@ -29,6 +45,13 @@ export function SettingsMenu(): React.JSX.Element {
   const setEditorFontPreset = useAppearanceStore((s) => s.setEditorFontPreset)
   const setEditorFontSizePx = useAppearanceStore((s) => s.setEditorFontSizePx)
   const setEditorLineHeight = useAppearanceStore((s) => s.setEditorLineHeight)
+
+  const exportTheme = useExportStore((s) => s.exportTheme)
+  const exportPageSize = useExportStore((s) => s.exportPageSize)
+  const exportOrientation = useExportStore((s) => s.exportOrientation)
+  const setExportTheme = useExportStore((s) => s.setExportTheme)
+  const setExportPageSize = useExportStore((s) => s.setExportPageSize)
+  const setExportOrientation = useExportStore((s) => s.setExportOrientation)
 
   const [reopenLastFolder, setReopenLastFolder] = useState(false)
   const [templatesDir, setTemplatesDir] = useState('')
@@ -215,6 +238,73 @@ export function SettingsMenu(): React.JSX.Element {
                 Reset
               </Button>
             )}
+          </div>
+        </div>
+
+        {/* ── Export ── */}
+        <Separator />
+
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Export</p>
+
+          <div className="mt-3">
+            <p className="text-[12px] text-muted-foreground">Theme</p>
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              {EXPORT_THEME_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={cn(
+                    'rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors',
+                    exportTheme === opt.value
+                      ? 'border-primary bg-accent text-accent-foreground'
+                      : 'border-border/60 bg-background text-muted-foreground hover:bg-accent/30'
+                  )}
+                  onClick={() => setExportTheme(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <p className="text-[12px] text-muted-foreground">Page size</p>
+            <select
+              className={cn(
+                'mt-1.5 flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm',
+                'outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+              value={exportPageSize}
+              onChange={(event) => setExportPageSize(event.target.value as ExportPageSize)}
+            >
+              {EXPORT_PAGE_SIZE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-3">
+            <p className="text-[12px] text-muted-foreground">Orientation</p>
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              {EXPORT_ORIENTATION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={cn(
+                    'rounded-lg border px-2 py-1.5 text-xs font-medium transition-colors',
+                    exportOrientation === opt.value
+                      ? 'border-primary bg-accent text-accent-foreground'
+                      : 'border-border/60 bg-background text-muted-foreground hover:bg-accent/30'
+                  )}
+                  onClick={() => setExportOrientation(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

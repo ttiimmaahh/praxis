@@ -74,6 +74,10 @@ interface ElectronAPI {
   unmarkLessonComplete: (courseRoot: string, modulePath: string, lessonPath: string) => Promise<CourseProgress>
   getSession: () => Promise<SessionData>
   saveSession: (data: Partial<SessionData>) => Promise<void>
+  exportDocumentHtml: (payload: DocumentExportPayload) => Promise<string | null>
+  exportDocumentPdf: (payload: DocumentPdfExportPayload) => Promise<string | null>
+  exportCourseHtml: (payload: CourseExportPayload) => Promise<string | null>
+  exportCoursePdf: (payload: CoursePdfExportPayload) => Promise<string | null>
   setTitleBarOverlay: (options: { isDark: boolean }) => Promise<void>
   onFileSystemChange: (callback: (event: FileSystemChangeEvent) => void) => () => void
   checkForUpdates: () => Promise<void>
